@@ -130,6 +130,84 @@ def qwen3_30b_a3b_pretrain_config() -> ConfigContainer:
     return cfg
 
 
+def qwen3_30b_a3b_perf_bf16_h100_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_30b_a3b_pretrain_config()
+
+    cfg.model.tensor_model_parallel_size = 1
+    cfg.model.pipeline_model_parallel_size = 1
+    cfg.model.expert_model_parallel_size = 8
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 40960
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "hybridep"
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+
+    cfg.train.micro_batch_size = 1
+    cfg.train.global_batch_size = 256
+
+
+def qwen3_30b_a3b_perf_fp8_h100_pretrain_config():
+    cfg = qwen3_30b_a3b_perf_bf16_h100_pretrain_config()
+
+    cfg.model.cuda_graph_impl = "transformer_engine"
+    cfg.model.cuda_graph_scope = ["attn", "moe_router", "moe_preprocess"]
+
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+
+    cfg.mixed_precision.fp8_recipe = "blockwise"
+    cfg.mixed_precision.fp8_format = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = True
+
+
+def qwen3_30b_a3b_perf_bf16_gb200_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_30b_a3b_perf_bf16_h100_pretrain_config()
+
+    cfg.model.expert_model_parallel_size = 16
+
+    cfg.train.micro_batch_size = 4
+    cfg.train.global_batch_size = 512
+
+    cfg.ddp.overlap_grad_reduce = False
+    cfg.ddp.overlap_param_gather = False
+
+
+def qwen3_30b_a3b_perf_mxfp8_gb200_partail_cg_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_30b_a3b_perf_bf16_h100_pretrain_config()
+
+    cfg.model.expert_model_parallel_size = 16
+    cfg.model.external_cuda_graph = True
+    cfg.model.cuda_graph_scope = ["attn", "moe_router", "moe_preprocess"]
+
+    cfg.train.micro_batch_size = 4
+    cfg.train.global_batch_size = 512
+
+    cfg.ddp.overlap_grad_reduce = False
+    cfg.ddp.overlap_param_gather = False
+
+    cfg.mixed_precision.fp8_recipe = "mxfp8"
+    cfg.mixed_precision.fp8_format = "e4m3"
+
+    cfg.rng.te_rng_tracker = True
+
+
+def qwen3_30b_a3b_perf_mxfp8_gb200_paged_stash_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_30b_a3b_perf_mxfp8_gb200_partail_cg_pretrain_config()
+
+    cfg.model.use_transformer_engine_op_fuser = True
+    cfg.model.moe_paged_stash = True
+    cfg.model.moe_expert_rank_capacity_factor = 1.5
+    cfg.model.moe_paged_stash_page_size = 64
+    cfg.model.moe_paged_stash_buffer_size_factor_cuda = 1.1
+    cfg.mdoel.moe_pad_experts_for_cuda_graph_inference = True
+    cfg.model.moe_mlp_glu_interleave_size = 32
+
+
 def qwen3_235b_a22b_pretrain_config() -> ConfigContainer:
     """Return a pre-training config for Qwen3-235B-A22B MoE.
 
