@@ -140,23 +140,17 @@ NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B300_NVFP4_V1 = NEMOTRON_3_SUPER_PRETRAIN_CONFI
 
 BASE_NEMOTRON_3_SUPER_CONFIG_B200 = replace(
     BASE_NEMOTRON_3_SUPER_CONFIG,
-    expert_model_parallel_size=64,
+    tensor_model_parallel_size=2,
+)
+
+NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B200_BF16_V1 = BASE_NEMOTRON_3_SUPER_CONFIG_B200
+NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B200_FP8_MX_V1 = replace(
+    BASE_NEMOTRON_3_SUPER_CONFIG_B200,
+    tensor_model_parallel_size=1,
     cuda_graph_impl="none",
     recompute_modules=["moe_act", "layernorm"],
 )
-
-NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B200_BF16_V1 = replace(
-    BASE_NEMOTRON_3_SUPER_CONFIG_B200,
-    recompute_modules=["moe_act", "moe", "layernorm", "core_attn"],
-)
-NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B200_FP8_MX_V1 = BASE_NEMOTRON_3_SUPER_CONFIG_B200
-NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B200_NVFP4_V1 = replace(
-    BASE_NEMOTRON_3_SUPER_CONFIG_B200,
-    tensor_model_parallel_size=2,
-    cuda_graph_impl="transformer_engine",
-    cuda_graph_scope=["mamba", "attn", "moe_router", "moe_preprocess"],
-    recompute_modules=None,
-)
+NEMOTRON_3_SUPER_PRETRAIN_CONFIG_B200_NVFP4_V1 = BASE_NEMOTRON_3_SUPER_CONFIG_B200
 
 
 __all__ = [
