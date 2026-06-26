@@ -228,7 +228,9 @@ def qwen3_30b_a3b_mxfp8_gb200_partail_cg_pretrain_config() -> ConfigContainer:
     cfg.model.moe_router_fusion = True
     cfg.model.moe_router_dtype = torch.float32
     cfg.model.external_cuda_graph = True
+    cfg.model.cuda_graph_impl = "transformer_engine"
     cfg.model.cuda_graph_scope = ["attn", "moe_router", "moe_preprocess"]
+    cfg.model.use_te_rng_tracker = True
 
     cfg.train.micro_batch_size = 4
     cfg.train.global_batch_size = 512
@@ -402,6 +404,280 @@ def qwen3_235b_a22b_pretrain_config() -> ConfigContainer:
     cfg.model.moe_router_force_load_balancing = False
 
     apply_flex_dispatcher_backend(cfg.model, cfg.model.moe_flex_dispatcher_backend)
+
+    return cfg
+
+
+def qwen3_235b_a22b_bf16_h100_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_235b_a22b_pretrain_config()
+
+    cfg.model.tensor_model_parallel_size = 2
+    cfg.model.pipeline_model_parallel_size = 8
+    cfg.model.virtual_pipeline_model_parallel_size = 3
+    cfg.model.expert_model_parallel_size = 32
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 4096
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "hybridep"
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+    cfg.model.delay_wgrad_compute = True
+    cfg.model.overlap_moe_expert_parallel_comm = True
+    cfg.model.recompute_granularity = "selecvtive"
+    cfg.model.recompute_modules = ["moe_act", "layernorm"]
+    cfg.model.cuda_graph_impl = "transformer_engine"
+    cfg.model.cuda_graph_scope = ["moe_router", "moe_preprocess"]
+    cfg.model.use_te_rng_tracker = True
+
+    cfg.train.micro_batch_size = 1
+    cfg.train.global_batch_size = 2048
+    cfg.train.manual_gc_interval = 5
+
+    cfg.checkpoint.dist_ckpt_strictness = "log_all"
+
+    return cfg
+
+
+def qwen3_235b_a22b_mxfp8_b200_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_235b_a22b_pretrain_config()
+
+    cfg.train.micro_batch_size = 3
+    cfg.train.global_batch_size = 3072
+    cfg.train.manual_gc_interval = 5
+
+    cfg.model.tensor_model_parallel_size = 2
+    cfg.model.pipeline_model_parallel_size = 4
+    cfg.model.virtual_pipeline_model_parallel_size = 2
+    cfg.model.expert_model_parallel_size = 16
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 4096
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "deepep"
+    cfg.model.moe_router_padding_for_quantization = True
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+    cfg.model.delay_wgrad_compute = True
+    cfg.model.overlap_moe_expert_parallel_comm = True
+    cfg.model.overlap_p2p_comm = True
+
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = True
+    cfg.mixed_precision.fp8_recipe = "mxfp8"
+
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = True
+
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+
+    cfg.checkpoint.dist_ckpt_strictness = "log_all"
+
+    return cfg
+
+
+def qwen3_235b_a22b_mxfp8_gb200_paged_stash_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_235b_a22b_pretrain_config()
+
+    cfg.train.micro_batch_size = 1
+    cfg.train.global_batch_size = 8192
+    cfg.train.manual_gc_interval = 5
+
+    cfg.model.tensor_model_parallel_size = 1
+    cfg.model.pipeline_model_parallel_size = 1
+    cfg.model.expert_model_parallel_size = 64
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 4096
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "deepep"
+    cfg.model.moe_router_padding_for_quantization = True
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+    cfg.model.moe_hybridep_num_sms = 32
+    cfg.model.moe_paged_stash = True
+    cfg.model.moe_expert_rank_capacity_factor = 1.2
+    cfg.model.moe_paged_stash_buffer_size_factor_cuda = 1.0
+    cfg.model.moe_paged_stash_buffer_size_factor_cpu = 0.8
+    cfg.model.moe_pad_experts_for_cuda_graph_inference = True
+    cfg.model.moe_mlp_glu_interleave_size = 32
+    cfg.model.use_transformer_engine_op_fuser = True
+    cfg.model.delay_wgrad_compute = True
+    cfg.model.overlap_moe_expert_parallel_comm = True
+    cfg.model.cuda_graph_impl = "local"
+    cfg.model.cuda_graph_scope = "full_iteration"
+    cfg.model.cuda_graph_warmup_steps = 2
+
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = True
+    cfg.mixed_precision.fp8_recipe = "mxfp8"
+
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = True
+
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+
+    cfg.checkpoint.dist_ckpt_strictness = "log_all"
+
+    cfg.rng.te_rng_tracker = True
+
+    cfg.dist.distributed_timeout_minutes = 220
+
+    return cfg
+
+
+def qwen3_235b_a22b_mxfp8_gb200_partial_cg_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_235b_a22b_pretrain_config()
+
+    cfg.train.micro_batch_size = 1
+    cfg.train.global_batch_size = 8192
+    cfg.train.manual_gc_interval = 5
+
+    cfg.model.tensor_model_parallel_size = 1
+    cfg.model.pipeline_model_parallel_size = 1
+    cfg.model.expert_model_parallel_size = 64
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 4096
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "deepep"
+    cfg.model.moe_router_padding_for_quantization = True
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+    cfg.model.moe_hybridep_num_sms = 32
+    cfg.model.delay_wgrad_compute = True
+    cfg.model.overlap_moe_expert_parallel_comm = True
+    cfg.model.cuda_graph_impl = "transformer_engine"
+    cfg.model.cuda_graph_scope = ["attn", "moe_router", "moe_preprocess"]
+    cfg.model.cuda_graph_warmup_steps = 2
+
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = True
+    cfg.mixed_precision.fp8_recipe = "mxfp8"
+
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = True
+
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+
+    cfg.checkpoint.dist_ckpt_strictness = "log_all"
+
+    cfg.rng.te_rng_tracker = True
+
+    cfg.dist.distributed_timeout_minutes = 220
+
+    return cfg
+
+
+def qwen3_235b_a22b_mxfp8_b300_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_235b_a22b_pretrain_config()
+
+    cfg.train.micro_batch_size = 3
+    cfg.train.global_batch_size = 9216
+    cfg.train.manual_gc_interval = 5
+
+    cfg.model.tensor_model_parallel_size = 2
+    cfg.model.pipeline_model_parallel_size = 1
+    cfg.model.expert_model_parallel_size = 16
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 4096
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "deepep"
+    cfg.model.moe_router_padding_for_quantization = True
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+    cfg.model.moe_hybridep_num_sms = 32
+    cfg.model.delay_wgrad_compute = True
+    cfg.model.overlap_moe_expert_parallel_comm = True
+    cfg.model.cuda_graph_impl = "transformer_engine"
+    cfg.model.cuda_graph_scope = ["attn", "moe_router"]
+    cfg.model.cuda_graph_warmup_steps = 2
+    cfg.model.use_te_rng_tracker = True
+
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = True
+    cfg.mixed_precision.fp8_recipe = "mxfp8"
+
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = True
+
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+
+    cfg.checkpoint.dist_ckpt_strictness = "log_all"
+
+    cfg.rng.te_rng_tracker = True
+
+    return cfg
+
+
+def qwen3_235b_a22b_mxfp8_gb300_pretrain_config() -> ConfigContainer:
+    cfg = qwen3_235b_a22b_pretrain_config()
+
+    cfg.train.micro_batch_size = 1
+    cfg.train.global_batch_size = 8192
+    cfg.train.manual_gc_interval = 5
+
+    cfg.model.tensor_model_parallel_size = 1
+    cfg.model.pipeline_model_parallel_size = 1
+    cfg.model.expert_model_parallel_size = 64
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.context_parallel_size = 1
+
+    cfg.model.yarn_original_max_position_embeddings = 4096
+    cfg.model.make_vocab_size_divisible_by = 1187
+    cfg.model.moe_router_force_load_balancing = True
+    cfg.model.moe_flex_dispatcher_backend = "deepep"
+    cfg.model.moe_router_padding_for_quantization = True
+    cfg.model.moe_router_fusion = True
+    cfg.model.moe_router_dtype = torch.float32
+    cfg.model.moe_hybridep_num_sms = 32
+    cfg.model.moe_paged_stash = True
+    cfg.model.moe_expert_rank_capacity_factor = 1.2
+    cfg.model.moe_paged_stash_buffer_size_factor_cuda = 1.0
+    cfg.model.moe_pad_experts_for_cuda_graph_inference = True
+    cfg.model.moe_mlp_glu_interleave_size = 32
+    cfg.model.use_transformer_engine_op_fuser = True
+    cfg.model.delay_wgrad_compute = True
+    cfg.model.overlap_moe_expert_parallel_comm = True
+    cfg.model.cuda_graph_impl = "local"
+    cfg.model.cuda_graph_scope = "full_iteration"
+    cfg.model.cuda_graph_warmup_steps = 2
+
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = True
+    cfg.mixed_precision.fp8_recipe = "mxfp8"
+
+    cfg.ddp.reuse_grad_buf_for_mxfp8_param_ag = True
+
+    cfg.optimizer.use_precision_aware_optimizer = True
+    cfg.optimizer.exp_avg_dtype = torch.bfloat16
+    cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
+
+    cfg.checkpoint.dist_ckpt_strictness = "log_all"
+
+    cfg.rng.te_rng_tracker = True
+
+    cfg.dist.distributed_timeout_minutes = 220
 
     return cfg
 
