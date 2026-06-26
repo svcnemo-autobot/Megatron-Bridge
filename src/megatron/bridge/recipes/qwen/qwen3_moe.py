@@ -20,7 +20,7 @@ from megatron.bridge.recipes.common import _peft_common, _pretrain_common, _sft_
 from megatron.bridge.recipes.utils.finetune_utils import default_peft_config
 from megatron.bridge.training.config import ConfigContainer
 from megatron.bridge.training.flex_dispatcher_backend import apply_flex_dispatcher_backend
-from megatron.bridge.training.mixed_precision import bf16_mixed
+from megatron.bridge.training.mixed_precision import bf16_mixed, get_mixed_precision_config
 
 
 def qwen3_30b_a3b_pretrain_config() -> ConfigContainer:
@@ -178,8 +178,9 @@ def qwen3_30b_a3b_fp8_h100_pretrain_config():
     cfg.optimizer.exp_avg_dtype = torch.bfloat16
     cfg.optimizer.exp_avg_sq_dtype = torch.bfloat16
 
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
     cfg.mixed_precision.fp8_recipe = "blockwise"
-    cfg.mixed_precision.fp8_format = "e4m3"
+    cfg.mixed_precision.fp8 = "e4m3"
     cfg.mixed_precision.fp8_param_gather = True
 
     return cfg
@@ -235,8 +236,10 @@ def qwen3_30b_a3b_mxfp8_gb200_partail_cg_pretrain_config() -> ConfigContainer:
     cfg.ddp.overlap_grad_reduce = False
     cfg.ddp.overlap_param_gather = False
 
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = False
     cfg.mixed_precision.fp8_recipe = "mxfp8"
-    cfg.mixed_precision.fp8_format = "e4m3"
 
     cfg.rng.te_rng_tracker = True
 
@@ -280,8 +283,10 @@ def qwen3_30b_a3b_mxfp8_gb200_paged_stash_pretrain_config() -> ConfigContainer:
     cfg.ddp.overlap_grad_reduce = False
     cfg.ddp.overlap_param_gather = False
 
+    cfg.mixed_precision = get_mixed_precision_config("bf16_with_fp8_current_scaling_mixed")
+    cfg.mixed_precision.fp8 = "e4m3"
+    cfg.mixed_precision.fp8_param_gather = False
     cfg.mixed_precision.fp8_recipe = "mxfp8"
-    cfg.mixed_precision.fp8_format = "e4m3"
 
     cfg.rng.te_rng_tracker = True
 
