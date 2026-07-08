@@ -2775,7 +2775,7 @@ def _load_checkpoint_from_path(
     if not cfg.checkpoint.finetune:
         if ckpt_type == CheckpointType.LOCAL:
             # Local checkpoints embed train_state_metadata in the state dict.
-            if "train_state_metadata" in state_dict:
+            if "train_state" in state_dict:
                 print_rank_0("Restoring TrainState from local checkpoint (train_state_metadata)")
                 state.train_state = TrainState()
                 state.train_state.load_state_dict(state_dict["train_state_metadata"])
