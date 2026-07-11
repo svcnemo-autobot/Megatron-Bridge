@@ -34,7 +34,7 @@ on:
         default: true
 jobs:
   code-freeze:
-    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_code_freeze.yml@v1.4.2
+    uses: NVIDIA-NeMo/FW-CI-templates/.github/workflows/_code_freeze.yml@bfdb5e35067fd8cd91ce21fca4eb1072ffd7ab8c # v1.4.2
     with:
       library-name: Megatron-Bridge
       python-package: megatron.bridge
@@ -58,7 +58,7 @@ jobs:
       DRY_RUN: ${{ inputs.dry-run }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           ref: main
           token: ${{ secrets.PAT }}
