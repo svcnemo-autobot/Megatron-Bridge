@@ -15,6 +15,8 @@
 from dataclasses import fields
 from typing import Optional, Union
 
+import torch
+from megatron.core import parallel_state
 from megatron.core.process_groups_config import ProcessGroupCollection
 from megatron.core.transformer import MegatronModule
 from megatron.core.utils import get_attr_wrapped_model
@@ -31,6 +33,12 @@ def get_pg_collection(model: Union[MegatronModule, list[MegatronModule]]) -> Pro
 
     Returns:
         ProcessGroupCollection: The model's process group collection.
+
+    Raises:
+        RuntimeError: If the model has no `pg_collection` attribute and the
+            fallback to the default MPU process groups is not possible because
+            torch.distributed and the Megatron-Core model-parallel state are
+            not initialized.
     """
     if isinstance(model, list):
         model_ref = model[0]
@@ -44,9 +52,25 @@ def get_pg_collection(model: Union[MegatronModule, list[MegatronModule]]) -> Pro
     except RuntimeError as e:
         # get_attr_wrapped_model raises a RuntimeError with this exact message
         # when the requested attribute does not exist on the wrapped model.
-        if "couldn't find attribute pg_collection" in str(e):
-            return ProcessGroupCollection.use_mpu_process_groups()
-        raise
+        if "couldn't find attribute pg_collection" not in str(e):
+            raise
+
+    # The model carries no pg_collection, so we fall back to the default
+    # MPU-based process groups. That path reaches into
+    # `megatron.core.parallel_state`, which requires torch.distributed AND the
+    # model-parallel groups to already be initialized; otherwise it dies with a
+    # bare, cryptic `AssertionError: data parallel group is not initialized`.
+    # Guard the precondition here and raise a clear, actionable error instead.
+    if not torch.distributed.is_initialized() or not parallel_state.model_parallel_is_initialized():
+        raise RuntimeError(
+            "get_pg_collection() fell back to the default MPU process groups because the "
+            "model has no `pg_collection` attribute, but torch.distributed and the "
+            "Megatron-Core model-parallel state are not initialized. Initialize them first "
+            "(e.g. call `torch.distributed.init_process_group(...)` and "
+            "`megatron.core.parallel_state.initialize_model_parallel(...)`), or attach a "
+            "`pg_collection` to the model, before calling get_pg_collection()."
+        )
+    return ProcessGroupCollection.use_mpu_process_groups()
 
 
 class DistTrainProcessGroupCollection(ProcessGroupCollection):
