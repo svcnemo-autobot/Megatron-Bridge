@@ -81,7 +81,9 @@ class TestGetPgCollection:
 
     def test_falls_back_to_mpu_when_pg_collection_attribute_missing(self):
         # `get_attr_wrapped_model` raises RuntimeError with this exact
-        # substring when the requested attribute does not exist.
+        # substring when the requested attribute does not exist. The MPU
+        # fallback is only taken when torch.distributed AND the model-parallel
+        # state are already initialized, so both guards are patched True here.
         missing_error = RuntimeError("couldn't find attribute pg_collection on the wrapped model")
         mpu_sentinel = object()
 
@@ -89,6 +91,14 @@ class TestGetPgCollection:
             mock.patch(
                 "megatron.bridge.training.utils.pg_utils.get_attr_wrapped_model",
                 side_effect=missing_error,
+            ),
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.torch.distributed.is_initialized",
+                return_value=True,
+            ),
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.parallel_state.model_parallel_is_initialized",
+                return_value=True,
             ),
             mock.patch.object(
                 ProcessGroupCollection,
@@ -100,6 +110,68 @@ class TestGetPgCollection:
 
         assert result is mpu_sentinel
         mock_use_mpu.assert_called_once_with()
+
+    def test_raises_clear_error_when_mpu_fallback_but_parallel_state_uninitialized(self):
+        # The model has no `pg_collection`, so `get_pg_collection` would fall
+        # back to the MPU process groups. When torch.distributed / the
+        # model-parallel state is NOT initialized, that fallback previously
+        # died deep inside `parallel_state` with a bare
+        # `AssertionError: data parallel group is not initialized`. We now
+        # replace that with a clear, actionable RuntimeError and never reach
+        # `use_mpu_process_groups()`.
+        missing_error = RuntimeError("couldn't find attribute pg_collection on the wrapped model")
+
+        with (
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.get_attr_wrapped_model",
+                side_effect=missing_error,
+            ),
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.torch.distributed.is_initialized",
+                return_value=False,
+            ),
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.parallel_state.model_parallel_is_initialized",
+                return_value=False,
+            ),
+            mock.patch.object(
+                ProcessGroupCollection,
+                "use_mpu_process_groups",
+            ) as mock_use_mpu,
+        ):
+            with pytest.raises(RuntimeError, match="not initialized"):
+                get_pg_collection(mock.MagicMock(name="model"))
+
+        # The cryptic MPU fallback must never be reached when the guard trips.
+        mock_use_mpu.assert_not_called()
+
+    def test_raises_clear_error_when_dist_up_but_model_parallel_uninitialized(self):
+        # torch.distributed is up but the model-parallel groups were never
+        # created: the guard must still trip before the MPU fallback.
+        missing_error = RuntimeError("couldn't find attribute pg_collection on the wrapped model")
+
+        with (
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.get_attr_wrapped_model",
+                side_effect=missing_error,
+            ),
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.torch.distributed.is_initialized",
+                return_value=True,
+            ),
+            mock.patch(
+                "megatron.bridge.training.utils.pg_utils.parallel_state.model_parallel_is_initialized",
+                return_value=False,
+            ),
+            mock.patch.object(
+                ProcessGroupCollection,
+                "use_mpu_process_groups",
+            ) as mock_use_mpu,
+        ):
+            with pytest.raises(RuntimeError, match="model-parallel state are not initialized"):
+                get_pg_collection(mock.MagicMock(name="model"))
+
+        mock_use_mpu.assert_not_called()
 
     def test_reraises_runtime_error_when_message_does_not_match(self):
         unrelated_error = RuntimeError("something else went wrong")
