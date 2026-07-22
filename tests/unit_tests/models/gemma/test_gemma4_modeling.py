@@ -1902,15 +1902,20 @@ class TestGemma4MoEHelpers:
         routing_probs = torch.tensor([[0.2, 0.3, 0.0], [1.0, 1.0, 0.0]], dtype=torch.float32)
         routing_map = torch.tensor([[True, True, False], [True, True, False]])
 
-        def fake_routing(self, logits, padding_mask=None, input_ids=None):
-            del self, logits, padding_mask, input_ids
+        def fake_routing(self, logits, padding_mask=None, input_ids=None, packed_seq_params=None):
+            del self, logits, padding_mask, input_ids, packed_seq_params
             return routing_probs, routing_map
 
         monkeypatch.setattr("megatron.bridge.models.gemma.modeling_gemma4.TopKRouter.routing", fake_routing)
         router = object.__new__(Gemma4TopKRouter)
         router.per_expert_scale = torch.tensor([1.0, 2.0, 3.0])
+        packed_seq_params = PackedSeqParams(qkv_format="thd")
 
-        out_probs, out_map = Gemma4TopKRouter.routing(router, torch.zeros(2, 3))
+        out_probs, out_map = Gemma4TopKRouter.routing(
+            router,
+            torch.zeros(2, 3),
+            packed_seq_params=packed_seq_params,
+        )
 
         assert out_map is routing_map
         torch.testing.assert_close(out_probs[0], torch.tensor([0.4, 1.2, 0.0]))
