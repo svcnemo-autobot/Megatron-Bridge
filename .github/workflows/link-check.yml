@@ -40,7 +40,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check links
+      - name: Check repository-local links
+        run: python scripts/ci/check_repository_links.py
+
+      - name: Check external links
         uses: lycheeverse/lychee-action@v2
         with:
           fail: true
@@ -52,6 +55,7 @@ jobs:
             --scheme http
             --accept '200..=299,401,403,429'
             --root-dir docs/fern
+            --exclude 'github\.com/NVIDIA-NeMo/Megatron-Bridge/(?:blob|tree)/main/'
             --exclude 'github\.com/deepseek-ai/DeepSeek-V4'
             --exclude 'github\.com/NVIDIA-NeMo/Megatron-Bridge/stargazers'
             --exclude 'sched\.com'
