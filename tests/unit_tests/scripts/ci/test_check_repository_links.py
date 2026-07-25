@@ -54,3 +54,12 @@ def test_repository_link_reports_missing_checkout_path(tmp_path, monkeypatch, ca
 
     assert module.check_repository_links([docs]) == 1
     assert "targets missing checkout path src/missing.py" in capsys.readouterr().out
+
+
+def test_repository_root_link_resolves_checkout(tmp_path, monkeypatch):
+    module = _load_check_links_module()
+    docs = tmp_path / "docs.md"
+    docs.write_text("[repository](https://github.com/NVIDIA-NeMo/Megatron-Bridge/tree/main/)\n")
+    monkeypatch.chdir(tmp_path)
+
+    assert module.check_repository_links([docs]) == 0

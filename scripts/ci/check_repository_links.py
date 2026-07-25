@@ -19,22 +19,20 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 
-_REPOSITORY_URL_PREFIXES = (
-    "https://github.com/NVIDIA-NeMo/Megatron-Bridge/blob/main/",
-    "https://github.com/NVIDIA-NeMo/Megatron-Bridge/tree/main/",
-)
 _REPOSITORY_URL_PATTERN = re.compile(
-    r"https://github\.com/NVIDIA-NeMo/Megatron-Bridge/(?:blob|tree)/main/[^\s)>\"']+"
+    r"https://github\.com/NVIDIA-NeMo/Megatron-Bridge/(?:blob|tree)/main(?:/[^\s)>\"']*)?"
+)
+_REPOSITORY_PATH_PATTERN = re.compile(
+    r"^/NVIDIA-NeMo/Megatron-Bridge/(?:blob|tree)/main(?:/(?P<path>.*))?$"
 )
 
 
 def _repository_path(url: str) -> Path | None:
     """Return the checkout path targeted by a repository-local GitHub URL."""
-    for prefix in _REPOSITORY_URL_PREFIXES:
-        if url.startswith(prefix):
-            prefix_path = urlparse(prefix).path
-            return Path(unquote(urlparse(url).path.removeprefix(prefix_path)))
-    return None
+    match = _REPOSITORY_PATH_PATTERN.fullmatch(urlparse(url).path)
+    if match is None:
+        return None
+    return Path(unquote(match.group("path") or "."))
 
 
 def _repository_links(paths: list[Path]) -> list[tuple[Path, str]]:
