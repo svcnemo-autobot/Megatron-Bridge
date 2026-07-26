@@ -212,6 +212,9 @@ jobs:
 
       - name: Install project
         shell: bash
+        env:
+          # The legacy basic-install image does not provide the NCCL EP build headers.
+          NVTE_WITH_NCCL_EP: "0"
         run: bash docker/common/install.sh --base-image pytorch --use-uv
 
       - name: Check imports for megatron-bridge
