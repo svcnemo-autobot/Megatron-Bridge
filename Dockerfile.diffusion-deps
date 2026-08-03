@@ -1,0 +1,5 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+RUN uv pip install --python /opt/venv/bin/python --no-config imageio imageio-ffmpeg av easydict
+USER 1000
