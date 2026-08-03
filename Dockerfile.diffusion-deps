@@ -8,5 +8,4 @@ RUN uv pip install --python /opt/venv/bin/python --no-config \
 RUN make -C /opt/Megatron-Bridge/3rdparty/Megatron-LM/megatron/core/datasets
 RUN chmod a+x /opt/Megatron-Bridge/3rdparty && \
     chmod -R a+rX /opt/Megatron-Bridge/3rdparty/Megatron-LM
-RUN chmod +t,o+w /opt/Megatron-Bridge
 USER 1000
