@@ -5,6 +5,7 @@ RUN uv pip install --python /opt/venv/bin/python --no-config \
     av==18.0.0 \
     imageio==2.37.4 \
     imageio-ffmpeg==0.6.0
+RUN make -C /opt/Megatron-Bridge/3rdparty/Megatron-LM/megatron/core/datasets
 RUN chmod a+x /opt/Megatron-Bridge/3rdparty && \
     chmod -R a+rX /opt/Megatron-Bridge/3rdparty/Megatron-LM
 RUN chmod +t,o+w /opt/Megatron-Bridge
