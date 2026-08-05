@@ -56,6 +56,7 @@ For programmatic verification inside scripts, use the built-in verifier:
 
 ```python
 from megatron.bridge.models.conversion.utils import weights_verification_table
+
 weights_verification_table(bridge, hf_pretrained, megatron_model)
 ```
 
@@ -127,7 +128,9 @@ def compare_tensors(a, b, name=""):
     max_diff = (a - b).abs().max().item()
     mean_diff = (a - b).abs().mean().item()
     cos_sim = torch.nn.functional.cosine_similarity(
-        a.flatten().float(), b.flatten().float(), dim=0,
+        a.flatten().float(),
+        b.flatten().float(),
+        dim=0,
     ).item()
     print(f"{name}: max_diff={max_diff:.6e}, mean_diff={mean_diff:.6e}, cosine_sim={cos_sim:.8f}")
     return max_diff, mean_diff, cos_sim

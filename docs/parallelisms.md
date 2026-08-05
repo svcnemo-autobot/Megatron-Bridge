@@ -147,9 +147,9 @@ from megatron.bridge.models import GPTModelProvider
 
 # Configure basic MoE model
 model_config = GPTModelProvider(
-    num_moe_experts=8,           # Number of experts in the MoE module
-    moe_router_topk=2,           # Number of experts activated per token
-    moe_ffn_hidden_size=8192,    # Hidden size for expert FFN layers
+    num_moe_experts=8,  # Number of experts in the MoE module
+    moe_router_topk=2,  # Number of experts activated per token
+    moe_ffn_hidden_size=8192,  # Hidden size for expert FFN layers
     # ... other model parameters
 )
 ```
@@ -301,18 +301,15 @@ model_config = GPTModelProvider(
     num_layers=32,
     hidden_size=4096,
     num_attention_heads=32,
-    
     # MoE configuration
-    num_moe_experts=8,                    # 8 experts total
-    moe_router_topk=2,                    # Activate 2 experts per token
-    moe_ffn_hidden_size=8192,            # Expert FFN hidden dimension
-    moe_token_dispatcher_type="alltoall", # Token dispatcher type
+    num_moe_experts=8,  # 8 experts total
+    moe_router_topk=2,  # Activate 2 experts per token
+    moe_ffn_hidden_size=8192,  # Expert FFN hidden dimension
+    moe_token_dispatcher_type="alltoall",  # Token dispatcher type
     moe_router_load_balancing_type="aux_loss",  # Load balancing
-    
     # Expert parallelism
-    expert_model_parallel_size=4,         # Distribute experts across 4 GPUs
-    expert_tensor_parallel_size=2,        # Apply TP within each expert
-    
+    expert_model_parallel_size=4,  # Distribute experts across 4 GPUs
+    expert_tensor_parallel_size=2,  # Apply TP within each expert
     # ... other model parameters
 )
 
@@ -357,7 +354,7 @@ from megatron.bridge.models import GPTModelProvider
 # Configure model with sequence parallelism
 model_config = GPTModelProvider(
     tensor_model_parallel_size=2,  # Required for sequence parallelism
-    sequence_parallel=True,        # Enable sequence parallelism
+    sequence_parallel=True,  # Enable sequence parallelism
     # ... other model parameters
 )
 ```
@@ -408,25 +405,22 @@ from megatron.bridge.training.config import ConfigContainer, OptimizerConfig
 # Configure model with multiple parallelism strategies
 model_config = GPTModelProvider(
     # Model parallelism
-    tensor_model_parallel_size=2,      # 2-way tensor parallelism
-    pipeline_model_parallel_size=4,    # 4-way pipeline parallelism
+    tensor_model_parallel_size=2,  # 2-way tensor parallelism
+    pipeline_model_parallel_size=4,  # 4-way pipeline parallelism
     virtual_pipeline_model_parallel_size=2,  # Interleaved pipeline
-    
     # Activation partitioning
-    sequence_parallel=True,            # Enable sequence parallelism (requires TP > 1)
-    context_parallel_size=2,           # 2-way context parallelism
-    
+    sequence_parallel=True,  # Enable sequence parallelism (requires TP > 1)
+    context_parallel_size=2,  # 2-way context parallelism
     # Expert parallelism (for MoE models)
-    num_moe_experts=8,                 # 8 experts
-    expert_model_parallel_size=4,      # Distribute experts across 4 GPUs
-    
+    num_moe_experts=8,  # 8 experts
+    expert_model_parallel_size=4,  # Distribute experts across 4 GPUs
     # ... other model parameters
 )
 
 # Configure distributed optimizer
 optimizer_config = OptimizerConfig(
     optimizer="adam",
-    use_distributed_optimizer=True,    # Enable distributed optimizer
+    use_distributed_optimizer=True,  # Enable distributed optimizer
     # ... other optimizer parameters
 )
 

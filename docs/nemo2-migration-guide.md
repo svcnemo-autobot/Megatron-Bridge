@@ -119,8 +119,10 @@ from megatron.bridge.models import GPTModelProvider  # Configure directly or der
 from megatron.core.optimizer import OptimizerConfig
 from megatron.bridge.training.config import SchedulerConfig
 from megatron.bridge.training.pretrain import pretrain
+
 # Use the provided GPT forward step
 from megatron.bridge.training.gpt_step import forward_step
+
 
 def create_config():
     return ConfigContainer(
@@ -138,9 +140,9 @@ def create_config():
         train=TrainingConfig(
             global_batch_size=512,
             micro_batch_size=1,
-            train_iters=1000,           # was max_steps
-            eval_interval=100,          # was val_check_interval
-            eval_iters=50,              # was limit_val_batches
+            train_iters=1000,  # was max_steps
+            eval_interval=100,  # was val_check_interval
+            eval_iters=50,  # was limit_val_batches
         ),
         # Optimization and scheduling
         optimizer=OptimizerConfig(
@@ -159,7 +161,7 @@ def create_config():
             blend=["/path/to/data_text_document"],
             seq_length=8192,
         ),
-        # Checkpointing and logging  
+        # Checkpointing and logging
         checkpoint=CheckpointConfig(
             save="/path/to/checkpoints",
             save_interval=100,
@@ -169,6 +171,7 @@ def create_config():
         # Mixed precision
         mixed_precision="bf16_mixed",
     )
+
 
 # Execute training
 cfg = create_config()
@@ -190,7 +193,7 @@ import nemo_run as run
 model = run.Config(llm.LlamaModel, config=run.Config(llm.Llama3Config8B))
 trainer = run.Config(
     nl.Trainer,
-    max_steps=500, 
+    max_steps=500,
     val_check_interval=100,
     devices=8,
     num_nodes=1,
@@ -207,7 +210,7 @@ data = run.Config(
 
 # PEFT configuration
 lora = llm.peft.LoRA(
-    target_modules=['linear_qkv', 'linear_proj'],
+    target_modules=["linear_qkv", "linear_proj"],
     dim=32,
     alpha=16,
 )
@@ -228,6 +231,7 @@ llm.finetune(
 from megatron.bridge.models import GPTModelProvider
 from megatron.bridge.data.builders import GPTSFTDatasetConfig, PromptCompletionSFTPreprocessingConfig
 from megatron.bridge.peft import LoRA
+
 
 def create_finetune_config():
     return ConfigContainer(
@@ -320,9 +324,11 @@ import nemo_run as run
 from nemo import lightning as nl
 from nemo.collections import llm
 
+
 @run.cli.factory(name="llama3_8b")
 def model() -> run.Config[pl.LightningModule]:
     return run.Config(llm.LlamaModel, config=run.Config(llm.Llama3Config8B))
+
 
 def trainer(
     tensor_parallelism: int = 1,
@@ -345,6 +351,7 @@ def trainer(
         val_check_interval=100,
         limit_val_batches=50,
     )
+
 
 @run.cli.factory(target=llm.pretrain, name="llama3_8b")
 def pretrain_recipe(
@@ -369,6 +376,7 @@ def pretrain_recipe(
         resume=llm.default_resume(),
     )
 
+
 # Usage
 if __name__ == "__main__":
     recipe = pretrain_recipe(name="my_run", num_nodes=2)
@@ -390,6 +398,7 @@ from megatron.bridge.training.config import (
 from megatron.core.optimizer import OptimizerConfig
 from megatron.bridge.models import GPTModelProvider
 from megatron.bridge.training.pretrain import pretrain
+
 
 def llama3_8b_config(
     # Model/parallelism params
@@ -436,17 +445,18 @@ def llama3_8b_config(
             lr_decay_style="cosine",
             lr_warmup_iters=100,
         ),
-    checkpoint=CheckpointConfig(
+        checkpoint=CheckpointConfig(
             save=checkpoint_dir or "/results/checkpoints",
             save_interval=save_interval,
         ),
         mixed_precision="bf16-mixed",
     )
 
+
 # Usage
 if __name__ == "__main__":
     from megatron.bridge.training.gpt_step import forward_step
-    
+
     cfg = llama3_8b_config(
         train_iters=10000,
         checkpoint_dir="/my/checkpoints",
@@ -504,9 +514,9 @@ Lightning `Trainer` parameters are now managed through dedicated configuration c
 trainer = run.Config(
     nl.Trainer,
     max_steps=1000,
-    val_check_interval=100,     # validation frequency
-    limit_val_batches=50,       # validation iterations per run
-    limit_test_batches=100,     # test iterations
+    val_check_interval=100,  # validation frequency
+    limit_val_batches=50,  # validation iterations per run
+    limit_test_batches=100,  # test iterations
     log_every_n_steps=10,
 )
 ```
@@ -514,9 +524,9 @@ trainer = run.Config(
 #### Now: Megatron Bridge
 ```python  
 train_config = TrainingConfig(
-    train_iters=1000,           # was max_steps
-    eval_interval=100,          # was val_check_interval  
-    eval_iters=50,              # was limit_val_batches (for both val and test)
+    train_iters=1000,  # was max_steps
+    eval_interval=100,  # was val_check_interval
+    eval_iters=50,  # was limit_val_batches (for both val and test)
 )
 logger_config = LoggerConfig(log_interval=10)  # was log_every_n_steps
 ```
@@ -544,8 +554,7 @@ data = PreTrainingDataModule(
 
 # Multiple datasets with weights
 data = PreTrainingDataModule(
-    paths=["30", "/path/to/dataset1_text_document", 
-           "70", "/path/to/dataset2_text_document"],
+    paths=["30", "/path/to/dataset1_text_document", "70", "/path/to/dataset2_text_document"],
     seq_length=4096,
     micro_batch_size=1,
     global_batch_size=512,
@@ -680,7 +689,7 @@ from megatron.bridge.training.tokenizers.config import TokenizerConfig
 # GPT2 BPE Tokenizer
 tokenizer_config = TokenizerConfig(
     tokenizer_type="GPT2BPETokenizer",
-    vocab_file="/path/to/vocab.json", 
+    vocab_file="/path/to/vocab.json",
     merge_file="/path/to/merges.txt",
 )
 
@@ -832,10 +841,7 @@ Mixed precision in NeMo 2.0 is controlled via precision plugins passed to the tr
 # Mixed precision via plugin
 from nemo.lightning.pytorch.plugins import MegatronMixedPrecisionPlugin
 
-trainer = run.Config(
-    nl.Trainer,
-    plugins=[MegatronMixedPrecisionPlugin(precision="bf16-mixed")]
-)
+trainer = run.Config(nl.Trainer, plugins=[MegatronMixedPrecisionPlugin(precision="bf16-mixed")])
 ```
 
 #### Now: Megatron Bridge
@@ -898,23 +904,21 @@ from nemo.lightning import AutoResume, NeMoLogger
 checkpoint_callback = ModelCheckpoint(
     dirpath="/path/to/checkpoints",
     every_n_train_steps=1000,
-    save_top_k=3,           # Saves best 3 checkpoints based on monitored metric
+    save_top_k=3,  # Saves best 3 checkpoints based on monitored metric
     save_last=True,
     save_weights_only=False,
-    monitor="val_loss",     # Metric to monitor for top-k selection
+    monitor="val_loss",  # Metric to monitor for top-k selection
 )
 
 # AutoResume for checkpoint resumption
 resume = AutoResume(
-    resume_if_exists=True,
-    resume_ignore_no_checkpoint=True,
-    resume_from_directory="/path/to/checkpoints"
+    resume_if_exists=True, resume_ignore_no_checkpoint=True, resume_from_directory="/path/to/checkpoints"
 )
 
 # NeMoLogger ties everything together
 logger = NeMoLogger(
     log_dir="/path/to/logs",
-    name="my_experiment", 
+    name="my_experiment",
     ckpt=checkpoint_callback,
 )
 
@@ -940,15 +944,13 @@ checkpoint_config = CheckpointConfig(
     # Saving configuration
     save="/path/to/checkpoints",
     save_interval=1000,
-    most_recent_k=3,        # Keeps 3 most recent checkpoints (not metric-based)
+    most_recent_k=3,  # Keeps 3 most recent checkpoints (not metric-based)
     save_optim=True,
     save_rng=True,
-    
     # Loading/resumption configuration
     load="/path/to/checkpoints",  # Resume from this directory (if exists)
-    load_optim=True,               # Load optimizer state
+    load_optim=True,  # Load optimizer state
     exit_on_missing_checkpoint=False,  # Don't exit if no checkpoint found (was resume_ignore_no_checkpoint)
-    
     # Format and performance options
     ckpt_format="torch_dist",
     async_save=True,
@@ -1000,7 +1002,7 @@ optim = MegatronOptimizerModule(
         warmup_steps=2000,
         constant_steps=0,
         decay_steps=100000,
-    )
+    ),
 )
 ```
 
@@ -1064,15 +1066,13 @@ from megatron.bridge.training.config import LoggerConfig
 
 logger_config = LoggerConfig(
     # General logging
-    log_interval=10,              # Log metrics every N iterations
-    log_throughput=True,          # Log throughput per GPU
-    
+    log_interval=10,  # Log metrics every N iterations
+    log_throughput=True,  # Log throughput per GPU
     # TensorBoard configuration
     tensorboard_dir="/path/to/tensorboard",
-    tensorboard_log_interval=1,   # Write to TensorBoard every N iterations
+    tensorboard_log_interval=1,  # Write to TensorBoard every N iterations
     log_timers_to_tensorboard=False,
     log_validation_ppl_to_tensorboard=False,
-    
     # Weights & Biases configuration
     wandb_project="my_project",
     wandb_exp_name="my_run",
@@ -1099,22 +1099,12 @@ Megatron Bridge centralizes all profiling functionality in {py:class}`bridge.tra
 # NeMo 2.0 used NsysCallback
 from nemo.lightning.pytorch.callbacks import NsysCallback
 
-trainer = run.Config(
-    nl.Trainer,
-    callbacks=[
-        NsysCallback(
-            start_step=100,
-            end_step=110,
-            ranks=[0],
-            gen_shape=True
-        )
-    ]
-)
+trainer = run.Config(nl.Trainer, callbacks=[NsysCallback(start_step=100, end_step=110, ranks=[0], gen_shape=True)])
 ```
 
 ##### Now: Megatron Bridge
 ```python
-# Megatron Bridge uses ProfilingConfig  
+# Megatron Bridge uses ProfilingConfig
 profiling_config = ProfilingConfig(
     use_nsys_profiler=True,
     profile_step_start=100,
@@ -1141,7 +1131,7 @@ trainer = run.Config(
             active_steps=5,
             trace_dir="/path/to/traces",
         )
-    ]
+    ],
 )
 ```
 
@@ -1170,7 +1160,7 @@ import nemo_run as run
 
 # Create PEFT configuration
 lora = llm.peft.LoRA(
-    target_modules=['linear_qkv', 'linear_proj'],
+    target_modules=["linear_qkv", "linear_proj"],
     dim=32,
     alpha=16,
     dropout=0.0,
@@ -1249,7 +1239,7 @@ result = llm.finetune(
     log=logger_config,
     resume=resume_config,
     optim=optimizer_config,
-    peft=peft_config,   # Optional PEFT
+    peft=peft_config,  # Optional PEFT
     tokenizer="model",  # or "data"
 )
 ```
@@ -1278,6 +1268,7 @@ cfg = ConfigContainer(
 
 # Pretraining
 from megatron.bridge.training.gpt_step import forward_step
+
 pretrain(cfg, forward_step_func=forward_step)
 
 # Fine-tuning (same function signature)
@@ -1436,10 +1427,7 @@ finetune(config, forward_step_func=forward_step)
 from megatron.bridge import AutoBridge
 
 # Convert HuggingFace to Megatron format
-AutoBridge.import_ckpt(
-    "meta-llama/Meta-Llama-3-8B",
-    "/path/to/megatron/checkpoint"
-)
+AutoBridge.import_ckpt("meta-llama/Meta-Llama-3-8B", "/path/to/megatron/checkpoint")
 ```
 
 See {doc}`bridge-guide` for more details on model conversion.
@@ -1458,11 +1446,13 @@ In NeMo 2.0, custom `forward_step` and `data_step` functions can be attached to 
 # NeMo 2.0: Define custom functions and attach to model config
 import torch
 
+
 def custom_forward_step(model, batch) -> torch.Tensor:
     """Custom forward step for specialized loss computation."""
-    output = model(batch['tokens'], batch['attention_mask'])
-    loss = compute_custom_loss(output, batch['labels'])
+    output = model(batch["tokens"], batch["attention_mask"])
+    loss = compute_custom_loss(output, batch["labels"])
     return loss
+
 
 # Attach to config in NeMo 2.0
 model_config = llm.Llama3Config8B()
@@ -1480,26 +1470,28 @@ from typing import Iterable
 from functools import partial
 from megatron.bridge.training.state import GlobalState
 
+
 def custom_forward_step(
     state: GlobalState,
-    data_iterator: Iterable, 
+    data_iterator: Iterable,
     model: torch.nn.Module,
 ) -> tuple[torch.Tensor, partial]:
     """Custom forward step for specialized loss computation."""
     # Get batch from iterator
     batch = next(data_iterator)
-    tokens = batch['tokens'].cuda()
-    labels = batch['labels'].cuda()
-    loss_mask = batch['loss_mask'].cuda()
-    
+    tokens = batch["tokens"].cuda()
+    labels = batch["labels"].cuda()
+    loss_mask = batch["loss_mask"].cuda()
+
     # Custom forward logic
-    output = model(tokens, attention_mask=batch.get('attention_mask'))
-    
+    output = model(tokens, attention_mask=batch.get("attention_mask"))
+
     # Define custom loss function
     def loss_func(output_tensor):
         return compute_custom_loss(output_tensor, labels, loss_mask)
-    
+
     return output, loss_func
+
 
 # Pass to training function
 pretrain(cfg, forward_step_func=custom_forward_step)
@@ -1514,16 +1506,18 @@ NeMo 2.0 uses `MegatronLossReduction` for custom loss computation and reduction 
 ```python
 from nemo.lightning.megatron_parallel import MegatronLossReduction
 
+
 class CustomLossReduction(MegatronLossReduction):
     def forward(self, batch, forward_out):
         """Compute loss from forward output."""
-        loss = compute_loss(forward_out, batch['labels'])
+        loss = compute_loss(forward_out, batch["labels"])
         return loss, {"custom_metric": some_metric}
-    
+
     def reduce(self, losses_reduced_per_micro_batch):
         """Reduce losses across microbatches."""
         losses = [x["custom_metric"] for x in losses_reduced_per_micro_batch]
         return torch.stack(losses).mean()
+
 
 # Attach to model
 model._training_loss_reduction = CustomLossReduction()
@@ -1535,15 +1529,15 @@ model._training_loss_reduction = CustomLossReduction()
 def custom_forward_step(state, data_iterator, model):
     """Forward step with custom loss reduction."""
     batch = next(data_iterator)
-    tokens = batch['tokens'].cuda()
-    labels = batch['labels'].cuda()
-    loss_mask = batch['loss_mask'].cuda()
-    
+    tokens = batch["tokens"].cuda()
+    labels = batch["labels"].cuda()
+    loss_mask = batch["loss_mask"].cuda()
+
     output = model(tokens)
-    
+
     def loss_func(output_tensor):
         """Compute and return loss in reduction-friendly format.
-        
+
         Return formats:
         - Single value: loss (averaged over microbatches only)
         - Tuple: (loss, num_tokens) - averaged over microbatches and tokens
@@ -1551,15 +1545,16 @@ def custom_forward_step(state, data_iterator, model):
         """
         loss = compute_loss(output_tensor, labels, loss_mask)
         num_tokens = loss_mask.sum()
-        
+
         # Return (loss, num_tokens) for proper averaging
         # Training loop automatically reduces across microbatches and data parallel ranks
         return {
             "loss": torch.cat([loss.view(1), num_tokens.view(1)]),
             "custom_metric": torch.cat([some_metric.view(1), num_tokens.view(1)]),
         }
-    
+
     return output, loss_func
+
 
 # Pass to training - reduction handled automatically
 pretrain(cfg, forward_step_func=custom_forward_step)
@@ -1600,10 +1595,7 @@ Validates that model weights are synchronized across data-parallel replicas.
 ```python
 from nemo.lightning.pytorch.callbacks import DDPParityChecker
 
-trainer = run.Config(
-    nl.Trainer,
-    callbacks=[DDPParityChecker(check_interval=100)]
-)
+trainer = run.Config(nl.Trainer, callbacks=[DDPParityChecker(check_interval=100)])
 ```
 
 #### Now: Megatron Bridge
@@ -1629,7 +1621,7 @@ trainer = run.Config(
             gc_interval_train=100,
             gc_interval_val=100,
         )
-    ]
+    ],
 )
 ```
 
@@ -1637,9 +1629,9 @@ trainer = run.Config(
 ```python
 # Built into TrainingConfig
 train_config = TrainingConfig(
-    manual_gc=True,              # Enable manual garbage collection
-    manual_gc_interval=100,      # GC interval during training (was gc_interval_train)
-    manual_gc_eval=True,         # Enable GC at start/end of evaluation (was gc_interval_val)
+    manual_gc=True,  # Enable manual garbage collection
+    manual_gc_interval=100,  # GC interval during training (was gc_interval_train)
+    manual_gc_eval=True,  # Enable GC at start/end of evaluation (was gc_interval_val)
 )
 ```
 
@@ -1658,7 +1650,7 @@ trainer = run.Config(
             tp_comm_overlap=True,
             # Additional callback options can be set here.
         )
-    ]
+    ],
 )
 ```
 
@@ -1684,10 +1676,7 @@ Gracefully handle SLURM/cluster preemption signals.
 ```python
 from nemo.lightning.pytorch.callbacks import PreemptionCallback
 
-trainer = run.Config(
-    nl.Trainer,
-    callbacks=[PreemptionCallback()]
-)
+trainer = run.Config(nl.Trainer, callbacks=[PreemptionCallback()])
 ```
 
 #### Now: Megatron Bridge
@@ -1708,10 +1697,7 @@ Enable Megatron Core experimental features.
 ```python
 from nemo.lightning.pytorch.callbacks import MegatronEnableExperimentalCallback
 
-trainer = run.Config(
-    nl.Trainer,
-    callbacks=[MegatronEnableExperimentalCallback()]
-)
+trainer = run.Config(nl.Trainer, callbacks=[MegatronEnableExperimentalCallback()])
 ```
 
 #### Now: Megatron Bridge
@@ -1731,12 +1717,7 @@ Configures expert capacity and token padding for MoE models.
 ```python
 from nemo.lightning.pytorch.callbacks import MegatronTokenDropCallback
 
-callbacks = [
-    MegatronTokenDropCallback(
-        moe_expert_capacity_factor=1.0,
-        moe_pad_expert_input_to_capacity=True
-    )
-]
+callbacks = [MegatronTokenDropCallback(moe_expert_capacity_factor=1.0, moe_pad_expert_input_to_capacity=True)]
 ```
 
 #### Now: Megatron Bridge
@@ -1751,11 +1732,7 @@ model = GPTModelProvider(
 )
 
 # Apply token drop optimization
-apply_moe_token_drop(
-    model,
-    moe_expert_capacity_factor=1.0,
-    moe_pad_expert_input_to_capacity=True
-)
+apply_moe_token_drop(model, moe_expert_capacity_factor=1.0, moe_pad_expert_input_to_capacity=True)
 ```
 
 ### DeepEP for MoE
@@ -1812,11 +1789,9 @@ If using NeMo-Run, **strongly recommend using `run.Script` mode** for better dep
 ```python
 # Megatron Bridge NeMo-Run integration
 import nemo_run as run
-from megatron.bridge.recipes.run_plugins import (
-    NsysPlugin, WandbPlugin, PreemptionPlugin, FaultTolerancePlugin
-)
+from megatron.bridge.recipes.run_plugins import NsysPlugin, WandbPlugin, PreemptionPlugin, FaultTolerancePlugin
 
-# Create task 
+# Create task
 task = run.Script("my_training_script.py", args=[])
 
 # Configure executor with plugins

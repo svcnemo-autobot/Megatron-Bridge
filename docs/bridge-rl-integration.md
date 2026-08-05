@@ -87,6 +87,7 @@ from megatron.bridge.training.config import (
 )
 from nemo_rl.models.policy import PolicyConfig  # or your own policy cfg type
 
+
 # Example: map your RL config to Megatron config
 def build_megatron_config(rl_cfg: PolicyConfig, pretrained_ckpt_dir: str) -> ConfigContainer:
     model_cfg = rl_cfg["megatron_cfg"].copy()
@@ -113,7 +114,9 @@ def build_megatron_config(rl_cfg: PolicyConfig, pretrained_ckpt_dir: str) -> Con
         overlap_param_gather=rl_cfg["megatron_cfg"]["distributed_data_parallel_config"]["overlap_param_gather"],
         average_in_collective=rl_cfg["megatron_cfg"]["distributed_data_parallel_config"]["average_in_collective"],
         use_distributed_optimizer=rl_cfg["megatron_cfg"]["optimizer"]["use_distributed_optimizer"],
-        data_parallel_sharding_strategy=rl_cfg["megatron_cfg"]["distributed_data_parallel_config"]["data_parallel_sharding_strategy"],
+        data_parallel_sharding_strategy=rl_cfg["megatron_cfg"]["distributed_data_parallel_config"][
+            "data_parallel_sharding_strategy"
+        ],
     )
 
     opt = OptimizerConfig(**rl_cfg["megatron_cfg"]["optimizer"])  # lr, wd, etc.
@@ -204,13 +207,16 @@ from megatron.core.pipeline_parallel import get_forward_backward_func
 model.train()
 forward_backward = get_forward_backward_func()
 
+
 # Your loss function should return (loss_tensor, metrics_dict)
 def rl_loss_fn(outputs, batch):
     # Compute logits → loss for your RL objective (e.g., PPO, DPO)
     loss = outputs.sum() * 0.0  # placeholder
     return loss, {"loss": loss.detach()}
 
+
 # Forward step: prepare inputs; return outputs and a collector that yields loss
+
 
 def forward_step_fn(data_iterator, model):
     batch = next(data_iterator).to("cuda")
@@ -221,6 +227,7 @@ def forward_step_fn(data_iterator, model):
         # multimodal features can be passed as kwargs
     )
     return outputs, (lambda _out: rl_loss_fn(outputs, batch))
+
 
 losses_reduced = forward_backward(
     forward_step_func=forward_step_fn,
@@ -251,6 +258,7 @@ For evaluation of token logprobs, run forward-only and reduce TP-sharded logits 
 ```python
 import torch
 from megatron.core.parallel_state import get_tensor_model_parallel_group, get_tensor_model_parallel_rank
+
 
 @torch.no_grad()
 def get_token_logprobs(model, batch):
@@ -354,6 +362,7 @@ for name, tensor in bridge.export_hf_weights([model], show_progress=False):
 
 # 2) Budget for staging buffers (optionally)
 from nemo_rl.utils.nvml import get_free_memory_bytes  # or your own NVML wrapper
+
 free_bytes = get_free_memory_bytes(torch.cuda.current_device())
 ratio = float(os.getenv("NRL_REFIT_BUFFER_MEMORY_RATIO", "0.2"))
 allowed_bytes = int(free_bytes * ratio)
@@ -365,23 +374,21 @@ from nemo_rl.utils.nvml import get_device_uuid
 refit_conversion_tasks = bridge.get_conversion_tasks([model])
 refit_tasks_current_index = 0
 
+
 def stream_next_chunk(keys: list[str]):
     """Yield ZMQ multipart frames for this chunk.
     Frames typically include: (metadata_json_bytes, payload_bytes).
     """
     global refit_tasks_current_index
-    conversion_tasks = refit_conversion_tasks[
-        refit_tasks_current_index : refit_tasks_current_index + len(keys)
-    ]
+    conversion_tasks = refit_conversion_tasks[refit_tasks_current_index : refit_tasks_current_index + len(keys)]
     refit_tasks_current_index += len(keys)
 
     device_uuid = get_device_uuid(torch.cuda.current_device())
 
     # Worker exposes a streaming generator that overlaps gather and send
-    for frames in worker.stream_refit_chunks(
-        conversion_tasks=conversion_tasks, device_uuid=device_uuid
-    ):
+    for frames in worker.stream_refit_chunks(conversion_tasks=conversion_tasks, device_uuid=device_uuid):
         yield frames  # send via zmq_socket.send_multipart(frames)
+
 
 # Example usage (producer)
 for frames in stream_next_chunk(list(refit_param_info_hf.keys())):
@@ -428,11 +435,13 @@ from megatron.bridge.training.state import GlobalState
 from megatron.bridge.training.checkpointing import init_checkpointing_context, save_checkpoint
 from megatron.core.pipeline_parallel import get_forward_backward_func
 
+
 class MegatronBridgeAdapter:
     def __init__(self, rl_cfg, pretrained_ckpt_dir: str):
         self.rl_cfg = rl_cfg
         self.megatron_cfg = build_megatron_config(rl_cfg, pretrained_ckpt_dir)
-        self.state = GlobalState(); self.state.cfg = self.megatron_cfg
+        self.state = GlobalState()
+        self.state.cfg = self.megatron_cfg
         self.ckpt_ctx = init_checkpointing_context(self.megatron_cfg.checkpoint)
         self._init_model()
 
@@ -440,14 +449,22 @@ class MegatronBridgeAdapter:
         from megatron.bridge.training.initialize import initialize_megatron, set_jit_fusion_options
         from megatron.bridge.models.model_provider import get_model
         from megatron.bridge.training.optim import setup_optimizer
+
         initialize_megatron(cfg=self.megatron_cfg)
         set_jit_fusion_options(self.megatron_cfg.model, self.megatron_cfg.train.micro_batch_size)
-        self.model_list = get_model(self.megatron_cfg.model, self.megatron_cfg.ddp,
-                                    use_torch_fsdp2=self.megatron_cfg.dist.use_torch_fsdp2,
-                                    overlap_param_gather_with_optimizer_step=self.megatron_cfg.optimizer.overlap_param_gather_with_optimizer_step)
+        self.model_list = get_model(
+            self.megatron_cfg.model,
+            self.megatron_cfg.ddp,
+            use_torch_fsdp2=self.megatron_cfg.dist.use_torch_fsdp2,
+            overlap_param_gather_with_optimizer_step=self.megatron_cfg.optimizer.overlap_param_gather_with_optimizer_step,
+        )
         self.model = self.model_list[0]
-        self.optimizer, self.scheduler = setup_optimizer(self.megatron_cfg.optimizer, self.megatron_cfg.scheduler, self.model_list,
-                                                         use_gloo_process_groups=self.megatron_cfg.dist.use_gloo_process_groups)
+        self.optimizer, self.scheduler = setup_optimizer(
+            self.megatron_cfg.optimizer,
+            self.megatron_cfg.scheduler,
+            self.model_list,
+            use_gloo_process_groups=self.megatron_cfg.dist.use_gloo_process_groups,
+        )
 
     @torch.no_grad()
     def get_logprobs(self, batch):
@@ -458,22 +475,40 @@ class MegatronBridgeAdapter:
     def train_step(self, mb_iter, num_microbatches, seq_len, mbs, loss_fn):
         self.model.train()
         fb = get_forward_backward_func()
+
         def fwd(data_it, model):
             batch = next(data_it).to("cuda")
             out = model(input_ids=batch["input_ids"], attention_mask=batch.get("attention_mask"))
             return out, (lambda _o: loss_fn(out, batch))
-        fb(forward_step_func=fwd, data_iterator=mb_iter, model=self.model, num_microbatches=num_microbatches,
-           seq_length=seq_len, micro_batch_size=mbs, decoder_seq_length=seq_len, forward_only=False, do_not_average_loss=True)
-        ok, _, _ = self.optimizer.step(); self.scheduler.step(increment=self.rl_cfg["train_global_batch_size"])
+
+        fb(
+            forward_step_func=fwd,
+            data_iterator=mb_iter,
+            model=self.model,
+            num_microbatches=num_microbatches,
+            seq_length=seq_len,
+            micro_batch_size=mbs,
+            decoder_seq_length=seq_len,
+            forward_only=False,
+            do_not_average_loss=True,
+        )
+        ok, _, _ = self.optimizer.step()
+        self.scheduler.step(increment=self.rl_cfg["train_global_batch_size"])
         return ok
 
     def save_ckpt(self, path: str):
-        save_checkpoint(self.state, [self.model], self.optimizer, self.scheduler,
-                        num_floating_point_operations_so_far=self.state.train_state.floating_point_operations_so_far,
-                        checkpointing_context=self.ckpt_ctx)
+        save_checkpoint(
+            self.state,
+            [self.model],
+            self.optimizer,
+            self.scheduler,
+            num_floating_point_operations_so_far=self.state.train_state.floating_point_operations_so_far,
+            checkpointing_context=self.ckpt_ctx,
+        )
 
     def export_hf(self, out_dir: str, trust_remote_code: bool = False):
         from megatron.bridge import AutoBridge
+
         bridge = AutoBridge.from_hf_pretrained(self.rl_cfg["model_name"], trust_remote_code=trust_remote_code)
         # Stream weights directly using AutoBridge.export_hf_weights; consume (save/IPC) as needed
         for name, tensor in bridge.export_hf_weights([self.model], show_progress=False):

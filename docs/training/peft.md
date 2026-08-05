@@ -61,9 +61,9 @@ from megatron.bridge.peft.lora import LoRA
 
 lora_config = LoRA(
     target_modules=["linear_qkv", "linear_proj", "linear_fc1", "linear_fc2"],
-    dim=16,                    # Rank of adaptation
-    alpha=32,                  # Scaling parameter  
-    dropout=0.1,               # Dropout rate
+    dim=16,  # Rank of adaptation
+    alpha=32,  # Scaling parameter
+    dropout=0.1,  # Dropout rate
 )
 ```
 
@@ -93,8 +93,8 @@ For more granular targeting, individual layers can be targeted for the adapters.
 # Target specific layers only
 lora_config = LoRA(
     target_modules=[
-        "*.layers.0.*.linear_qkv",   # First layer only
-        "*.layers.1.*.linear_qkv",   # Second layer only
+        "*.layers.0.*.linear_qkv",  # First layer only
+        "*.layers.1.*.linear_qkv",  # Second layer only
     ]
 )
 ```
@@ -198,14 +198,17 @@ from megatron.bridge.peft.canonical_lora import CanonicalLoRA
 
 canonical_lora_config = CanonicalLoRA(
     target_modules=[
-        "linear_q", "linear_k", "linear_v",      # Individual Q, K, V projections
-        "linear_proj",                           # Attention output projection
-        "linear_fc1_up", "linear_fc1_gate",     # Individual up and gate projections
-        "linear_fc2"                             # Second MLP layer
+        "linear_q",
+        "linear_k",
+        "linear_v",  # Individual Q, K, V projections
+        "linear_proj",  # Attention output projection
+        "linear_fc1_up",
+        "linear_fc1_gate",  # Individual up and gate projections
+        "linear_fc2",  # Second MLP layer
     ],
-    dim=16,                    # Rank of adaptation
-    alpha=32,                  # Scaling parameter
-    dropout=0.1,               # Dropout rate
+    dim=16,  # Rank of adaptation
+    alpha=32,  # Scaling parameter
+    dropout=0.1,  # Dropout rate
 )
 ```
 
@@ -255,9 +258,9 @@ from megatron.bridge.peft.dora import DoRA
 
 dora_config = DoRA(
     target_modules=["linear_qkv", "linear_proj", "linear_fc1", "linear_fc2"],
-    dim=16,                    # Rank of adaptation
-    alpha=32,                  # Scaling parameter
-    dropout=0.1,               # Dropout rate
+    dim=16,  # Rank of adaptation
+    alpha=32,  # Scaling parameter
+    dropout=0.1,  # Dropout rate
 )
 ```
 

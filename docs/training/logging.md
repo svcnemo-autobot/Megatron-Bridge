@@ -81,7 +81,7 @@ TensorBoard captures a range of training and system metrics, including:
   cfg.logger = LoggerConfig(
       tensorboard_dir="./runs/tensorboard",
       tensorboard_log_interval=10,
-      log_timers_to_tensorboard=True,   # optional
+      log_timers_to_tensorboard=True,  # optional
       log_memory_to_tensorboard=False,  # optional
   )
   ```
@@ -128,11 +128,11 @@ In addition, the full run configuration is synced at initialization, allowing fo
   from megatron.bridge.training.config import LoggerConfig
 
   cfg.logger = LoggerConfig(
-      tensorboard_dir="./runs/tensorboard",   # recommended: enables shared logging gate
+      tensorboard_dir="./runs/tensorboard",  # recommended: enables shared logging gate
       wandb_project="my_project",
       wandb_exp_name="my_experiment",
-      wandb_entity="my_team",                 # optional
-      wandb_save_dir="./runs/wandb",          # optional
+      wandb_entity="my_team",  # optional
+      wandb_save_dir="./runs/wandb",  # optional
   )
   ```
   
@@ -188,7 +188,7 @@ When enabled, MLFlow receives:
       mlflow_experiment="my_megatron_experiment",
       mlflow_run_name="llama32_1b_pretrain_run",
       mlflow_tracking_uri="http://mlflow:5000",  # optional
-      mlflow_tags={                              # optional
+      mlflow_tags={  # optional
           "project": "llama32",
           "phase": "pretrain",
       },
@@ -231,8 +231,8 @@ When enabled, Comet ML receives:
       tensorboard_dir="./runs/tensorboard",
       comet_project="my_project",
       comet_experiment_name="llama32_1b_pretrain_run",
-      comet_workspace="my_workspace",          # optional
-      comet_tags=["pretrain", "llama32"],       # optional
+      comet_workspace="my_workspace",  # optional
+      comet_tags=["pretrain", "llama32"],  # optional
   )
   ```
 
@@ -348,7 +348,7 @@ cfg.tensor_inspect = TensorInspectConfig(
             "transformer_engine": {
                 "LogFp8TensorStats": {
                     "enabled": True,
-                    "tensors": ["weight","activation","gradient"],
+                    "tensors": ["weight", "activation", "gradient"],
                     "stats": ["underflows%", "mse"],
                     "freq": 5,
                     "start_step": 0,
@@ -366,7 +366,6 @@ cfg.tensor_inspect = TensorInspectConfig(
     features="./conf/fp8_inspect.yaml",
     log_dir="./logs/tensor_inspect",
 )
-
 ```
 
 #### Layer Selection

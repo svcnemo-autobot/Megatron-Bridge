@@ -64,7 +64,7 @@ cfg.ddp.check_for_nan_in_grad = False
 
 ```python
 cfg.model.cuda_graph_impl = "transformer_engine"
-cfg.model.cuda_graph_scope = ["attn"]           # or ["attn", "mlp"]
+cfg.model.cuda_graph_scope = ["attn"]  # or ["attn", "mlp"]
 cfg.model.cuda_graph_warmup_steps = 3
 cfg.model.use_te_rng_tracker = True
 cfg.rng.te_rng_tracker = True

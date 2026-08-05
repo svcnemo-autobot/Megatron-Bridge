@@ -209,6 +209,7 @@ class _FullDimQKNormMapping(MegatronParamMapping):
     def hf_to_megatron(self, hf_weights):
         # Custom scatter logic for full-dim QK norm
         ...
+
     def megatron_to_hf(self, megatron_weights):
         # Custom gather logic
         ...

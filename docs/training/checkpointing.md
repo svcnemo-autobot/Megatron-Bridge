@@ -69,14 +69,12 @@ By default, `checkpoint.load` loads the **latest checkpoint** available in the s
 from megatron.bridge.training.config import CheckpointConfig
 
 # Load latest checkpoint
-checkpoint = CheckpointConfig(
-    load="/path/to/checkpoint_dir"
-)
+checkpoint = CheckpointConfig(load="/path/to/checkpoint_dir")
 
 # Load specific iteration
 checkpoint = CheckpointConfig(
     load="/path/to/checkpoint_dir",
-    ckpt_step=5000  # Overrides tracker, loads iter_0005000
+    ckpt_step=5000,  # Overrides tracker, loads iter_0005000
 )
 ```
 
@@ -321,8 +319,7 @@ Energon checkpoints its workers periodically and, on restore, rewinds to the las
 
 ```python
 @stateless(restore_seeds=True)
-def encode_sample(self, sample):
-    ...
+def encode_sample(self, sample): ...
 ```
 
 See the Megatron-Energon source — [`SavableDataLoader.save_state_rank` / `restore_state_rank`](https://github.com/NVIDIA/Megatron-Energon/blob/bef8be243505959973cc07ee740432e7a2454cf1/src/megatron/energon/savable_loader.py#L924) and the periodic-checkpoint/skip-forward logic in `SavableDatasetWrapper` (`_store_checkpoint`, `get_checkpoint`), plus the `stateless` decorator's `restore_seeds`.
@@ -451,9 +448,7 @@ class MyCheckpointManager:
             skip_load_to_model_and_opt=ctx.skip_load_to_model_and_opt,
         )
 
-    def finalize_async_saves(
-        self, state: GlobalState, blocking: bool = False, terminate: bool = False
-    ) -> None:
+    def finalize_async_saves(self, state: GlobalState, blocking: bool = False, terminate: bool = False) -> None:
         """Finalize any pending asynchronous saves."""
         from megatron.bridge.training.checkpointing import maybe_finalize_async_save
 

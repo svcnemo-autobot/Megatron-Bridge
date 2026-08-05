@@ -11,21 +11,21 @@ from megatron.bridge.training.config import ConfigContainer
 
 # ConfigContainer brings together all training configurations
 config = ConfigContainer(
-    model=model_provider,             # Model architecture and parallelism
-    train=training_config,            # Training loop parameters  
-    optimizer=optimizer_config,       # Megatron Optimization settings
-    scheduler=scheduler_config,       # Learning rate scheduling
-    dataset=dataset_config,           # Data loading configuration
-    logger=logger_config,             # Logging and monitoring
-    tokenizer=tokenizer_config,       # Tokenization settings
-    checkpoint=checkpoint_config,     # Checkpointing and resuming
-    dist=distributed_config,          # Distributed training setup
-    ddp=ddp_config,                   # Megatron Distributed Data Parallel settings
+    model=model_provider,  # Model architecture and parallelism
+    train=training_config,  # Training loop parameters
+    optimizer=optimizer_config,  # Megatron Optimization settings
+    scheduler=scheduler_config,  # Learning rate scheduling
+    dataset=dataset_config,  # Data loading configuration
+    logger=logger_config,  # Logging and monitoring
+    tokenizer=tokenizer_config,  # Tokenization settings
+    checkpoint=checkpoint_config,  # Checkpointing and resuming
+    dist=distributed_config,  # Distributed training setup
+    ddp=ddp_config,  # Megatron Distributed Data Parallel settings
     # Optional configurations
-    peft=peft_config,                 # Parameter-efficient fine-tuning
-    profiling=profiling_config,       # Performance profiling
-    mixed_precision=mp_config,        # Mixed precision training
-    comm_overlap=comm_overlap_config, # Communication overlap settings
+    peft=peft_config,  # Parameter-efficient fine-tuning
+    profiling=profiling_config,  # Performance profiling
+    mixed_precision=mp_config,  # Mixed precision training
+    comm_overlap=comm_overlap_config,  # Communication overlap settings
     # ... and more
 )
 ```
@@ -83,7 +83,7 @@ config = ConfigContainer.from_yaml("my_config.yaml")  # Load previously saved co
 
 # 3. Programmatic override after creation
 config.train.global_batch_size = 512  # Override after instantiation
-config.model.num_layers = 48          # Modify model architecture
+config.model.num_layers = 48  # Modify model architecture
 ```
 
 ### Centralized Configuration
@@ -103,9 +103,9 @@ The configuration system is built using nested dataclasses, providing:
 ```python
 @dataclass
 class ConfigContainer:
-    model: GPTModelProvider      # Dataclass for model architecture
-    train: TrainingConfig        # Dataclass for training parameters
-    optimizer: OptimizerConfig   # Dataclass for optimization settings
+    model: GPTModelProvider  # Dataclass for model architecture
+    train: TrainingConfig  # Dataclass for training parameters
+    optimizer: OptimizerConfig  # Dataclass for optimization settings
     # ... nested dataclasses for each concern
 ```
 
@@ -148,8 +148,8 @@ Model configurations are designed to be independently usable outside the full tr
 model_provider = GPTModelProvider(
     num_layers=24,
     hidden_size=2048,
-    vocab_size=50000,    # Must be explicitly set
-    seq_length=2048,     # Must be explicitly set
+    vocab_size=50000,  # Must be explicitly set
+    seq_length=2048,  # Must be explicitly set
 )
 
 # This works independently of other configs

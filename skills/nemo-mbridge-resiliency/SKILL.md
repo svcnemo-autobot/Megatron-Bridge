@@ -135,6 +135,7 @@ plugins = [
 
 ```python
 import signal
+
 cfg.train.exit_signal_handler = True
 cfg.train.exit_signal = signal.SIGTERM
 cfg.train.exit_signal_handler_for_dataloader = False

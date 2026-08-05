@@ -77,11 +77,8 @@ cfg.logger.tensorboard_dir = log_dir + "/tb_logs"
 cfg.checkpoint.save = log_dir + "/checkpoints"
 cfg.checkpoint.load = log_dir + "/checkpoints"
 # Set up training dataset
-cfg.dataset.blend=[[
-    f"/path/to/dclm/preprocessed/dclm_{i:02d}_text_document"
-    for i in range(1, 11)
-], None]
-cfg.dataset.split="9999,8,2"
+cfg.dataset.blend = [[f"/path/to/dclm/preprocessed/dclm_{i:02d}_text_document" for i in range(1, 11)], None]
+cfg.dataset.split = "9999,8,2"
 cfg.dataset.path_to_cache = "/path/to/cache"
 # cfg.model.num_layers = 8  # train a smaller model if OOM
 # MTP Configuration

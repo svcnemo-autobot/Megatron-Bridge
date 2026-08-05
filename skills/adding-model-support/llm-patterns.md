@@ -101,13 +101,13 @@ from megatron.bridge.models.conversion.param_mapping import AutoMapping, QKVMapp
 from megatron.bridge.models.gpt_provider import GPTModelProvider
 from megatron.bridge.models.hf_pretrained.causal_lm import PreTrainedCausalLM
 
+
 @MegatronModelBridge.register_bridge(
-    source=MyModelForCausalLM,    # HF class (or string "MyModelForCausalLM")
-    target=GPTModel,               # Megatron target
-    model_type="my_model",         # HF model_type
+    source=MyModelForCausalLM,  # HF class (or string "MyModelForCausalLM")
+    target=GPTModel,  # Megatron target
+    model_type="my_model",  # HF model_type
 )
 class MyModelBridge(MegatronModelBridge):
-
     def provider_bridge(self, hf_pretrained: PreTrainedCausalLM) -> GPTModelProvider:
         provider = super().provider_bridge(hf_pretrained)
 
@@ -190,19 +190,25 @@ The base class provides automatic mapping for common fields — no need to dupli
 For models with Mixture of Experts, use expert-specific mappings:
 
 ```python
-ExpertMLPGateUpProjMapping(
-    megatron_param="decoder.layers.*.mlp.experts.local_experts.*.linear_fc1.weight",
-    gate="model.layers.*.mlp.experts.*.gate_proj.weight",
-    up="model.layers.*.mlp.experts.*.up_proj.weight",
-),
-ExpertMLPDownProjMapping(
-    megatron_param="decoder.layers.*.mlp.experts.local_experts.*.linear_fc2.weight",
-    hf_param="model.layers.*.mlp.experts.*.down_proj.weight",
-),
-AutoMapping(
-    megatron_param="decoder.layers.*.mlp.router.weight",
-    hf_param="model.layers.*.mlp.gate.weight",
-),
+(
+    ExpertMLPGateUpProjMapping(
+        megatron_param="decoder.layers.*.mlp.experts.local_experts.*.linear_fc1.weight",
+        gate="model.layers.*.mlp.experts.*.gate_proj.weight",
+        up="model.layers.*.mlp.experts.*.up_proj.weight",
+    ),
+)
+(
+    ExpertMLPDownProjMapping(
+        megatron_param="decoder.layers.*.mlp.experts.local_experts.*.linear_fc2.weight",
+        hf_param="model.layers.*.mlp.experts.*.down_proj.weight",
+    ),
+)
+(
+    AutoMapping(
+        megatron_param="decoder.layers.*.mlp.router.weight",
+        hf_param="model.layers.*.mlp.gate.weight",
+    ),
+)
 ```
 
 ### Optional weight modification hooks
@@ -213,6 +219,7 @@ Override these for special handling (e.g., quantized weights, expert layout):
 def maybe_modify_loaded_hf_weight(self, hf_param, hf_state_dict):
     """Transform HF weights before loading into Megatron (e.g., dequantize)."""
     return hf_state_dict[hf_param]
+
 
 def maybe_modify_converted_hf_weight(self, task, converted_weights_dict, hf_state_dict):
     """Transform weights after Megatron→HF conversion (e.g., merge expert shards)."""

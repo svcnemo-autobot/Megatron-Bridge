@@ -13,6 +13,7 @@ import pytest
 from unittest.mock import Mock
 from megatron.bridge.models.hf_pretrained.causal_lm import PreTrainedCausalLM
 
+
 def _make_mock_config():
     """Create a mock HF config with model-specific attributes."""
     config = Mock()
@@ -31,10 +32,12 @@ def _make_mock_config():
     # config.vision_config = _make_vision_config()
     return config
 
+
 def _make_mock_pretrained(config):
     pretrained = Mock(spec=PreTrainedCausalLM)
     pretrained.config = config
     return pretrained
+
 
 class TestMyModelBridgeProviderBridge:
     @pytest.fixture
@@ -59,6 +62,7 @@ class TestMyModelBridgeProviderBridge:
         provider = bridge.provider_bridge(mock_pretrained)
         assert provider.share_embeddings_and_output_weights == False
 
+
 class TestMyModelBridgeMappingRegistry:
     @pytest.fixture
     def bridge(self):
@@ -66,7 +70,7 @@ class TestMyModelBridgeMappingRegistry:
 
     def test_has_embedding_mapping(self, bridge):
         registry = bridge.mapping_registry()
-        hf_params = {m.hf_param for m in registry.mappings if hasattr(m, 'hf_param')}
+        hf_params = {m.hf_param for m in registry.mappings if hasattr(m, "hf_param")}
         assert "model.embed_tokens.weight" in hf_params
 
     def test_has_output_layer_mapping(self, bridge):
@@ -84,8 +88,10 @@ Only needed for VLM providers or LLM providers with custom fields/`provide()` lo
 class TestMyModelProvider:
     def test_defaults(self):
         provider = MyModelProvider(
-            num_layers=32, hidden_size=4096,
-            num_attention_heads=32, num_query_groups=8,
+            num_layers=32,
+            hidden_size=4096,
+            num_attention_heads=32,
+            num_query_groups=8,
         )
         assert provider.normalization == "RMSNorm"
 
@@ -102,15 +108,12 @@ class TestMyModelProvider:
 
 ```python
 # Module-level skip for optional dependencies
-pytestmark = pytest.mark.skipif(
-    not _HAS_MODEL_CLASS,
-    reason="transformers version does not support MyModel"
-)
+pytestmark = pytest.mark.skipif(not _HAS_MODEL_CLASS, reason="transformers version does not support MyModel")
+
 
 # Class-level skip
 @pytest.mark.skipif(not _HAS_MOE_CLASS, reason="MoE class not available")
-class TestMyMoEBridge:
-    ...
+class TestMyMoEBridge: ...
 ```
 
 ## Functional Tests
@@ -138,15 +141,18 @@ HF_TOY_MODEL_CONFIG = {
     # ... model-specific fields
 }
 
+
 @pytest.fixture(scope="class")
 def toy_model_path(tmp_path_factory):
     """Create a small HF model for testing."""
     from transformers import AutoConfig
+
     model_dir = tmp_path_factory.mktemp("toy_model")
     config = AutoConfig.for_model(**HF_TOY_MODEL_CONFIG)
     model = MyModelForCausalLM(config)
     model.save_pretrained(str(model_dir), safe_serialization=True)
     return str(model_dir)
+
 
 @pytest.mark.run_only_on("GPU")
 class TestMyModelConversion:
@@ -154,14 +160,20 @@ class TestMyModelConversion:
     def test_roundtrip(self, toy_model_path, tp, pp, tmp_path):
         result = subprocess.run(
             [
-                "uv", "run", "python", "-m", "torch.distributed.run",
+                "uv",
+                "run",
+                "python",
+                "-m",
+                "torch.distributed.run",
                 f"--nproc_per_node={tp * pp}",
                 "examples/conversion/hf_megatron_roundtrip_multi_gpu.py",
                 f"--hf-model-id={toy_model_path}",
                 f"--output-dir={tmp_path}",
-                f"--tp={tp}", f"--pp={pp}",
+                f"--tp={tp}",
+                f"--pp={pp}",
             ],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         assert result.returncode == 0, f"Conversion failed: {result.stderr}"
 ```
