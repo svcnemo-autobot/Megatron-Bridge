@@ -338,6 +338,10 @@ def qwen3_235b_a22b_pretrain_256gpu_h100_bf16_config() -> ConfigContainer:
     # Keep the complete process environment visible on the recipe.
     cfg.env_vars = {
         **COMMON_RECIPE_ENV_VARS,
+        # Re-enable the TE CuTe DSL fused grouped MLP kernel.
+        # MCore #5487 gated the fused implementation behind this env var; without
+        # it, the MoE GLU activation path falls back to the slower non-fused path.
+        "NVTE_CUTEDSL_FUSED_GROUPED_MLP": 1,
     }
     return cfg
 
