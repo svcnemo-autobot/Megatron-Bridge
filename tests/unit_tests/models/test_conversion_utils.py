@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import Mock
+
 import pytest
 
-from megatron.bridge.models.conversion.utils import mcore_to_hf_window_size
+from megatron.bridge.models.conversion.utils import mcore_to_hf_window_size, unwrap_model
 
 
 @pytest.mark.parametrize(
@@ -33,3 +35,14 @@ def test_mcore_to_hf_window_size(window_size, expected):
 def test_mcore_to_hf_window_size_rejects_malformed_pair():
     with pytest.raises(ValueError, match="two-element MCore window"):
         mcore_to_hf_window_size([2047])
+
+
+def test_unwrap_model_ignores_non_type_module_instances():
+    class Wrapper:
+        def __init__(self, module):
+            self.module = module
+
+    model = object()
+    wrapper = Wrapper(model)
+
+    assert unwrap_model(wrapper, module_instances=(Wrapper, Mock())) is model
