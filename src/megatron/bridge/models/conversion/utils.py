@@ -44,6 +44,7 @@ def _get_default_module_instances() -> tuple[type, ...]:
     from megatron.core.distributed import DistributedDataParallel as DDP
     from megatron.core.distributed import TorchFullyShardedDataParallel as torch_FSDP
     from megatron.core.distributed.fsdp import mcore_fsdp_adapter
+    from megatron.core.distributed.fsdp.src.megatron_fsdp import MegatronFSDP
     from megatron.core.transformer.module import Float16Module
 
     fsdp_types = tuple(
@@ -51,7 +52,7 @@ def _get_default_module_instances() -> tuple[type, ...]:
         for name in ("FullyShardedDataParallelV1", "FullyShardedDataParallelV2", "FullyShardedDataParallel")
         if isinstance((wrapper_type := getattr(mcore_fsdp_adapter, name, None)), type)
     )
-    return (DDP, torch_FSDP, *fsdp_types, Float16Module)
+    return (DDP, torch_FSDP, *fsdp_types, MegatronFSDP, Float16Module)
 
 
 def unwrap_model(model, module_instances=None):

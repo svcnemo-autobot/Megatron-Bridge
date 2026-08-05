@@ -66,6 +66,9 @@ def test_unwrap_model_default_supports_fsdp_adapter_layout(monkeypatch, adapter_
     class TorchFullyShardedDataParallel(Wrapper):
         pass
 
+    class MegatronFSDP(Wrapper):
+        pass
+
     class Float16Module(Wrapper):
         pass
 
@@ -82,14 +85,17 @@ def test_unwrap_model_default_supports_fsdp_adapter_layout(monkeypatch, adapter_
     distributed.TorchFullyShardedDataParallel = TorchFullyShardedDataParallel
     fsdp = ModuleType("megatron.core.distributed.fsdp")
     fsdp.mcore_fsdp_adapter = adapter
+    raw_fsdp = ModuleType("megatron.core.distributed.fsdp.src.megatron_fsdp")
+    raw_fsdp.MegatronFSDP = MegatronFSDP
     transformer_module = ModuleType("megatron.core.transformer.module")
     transformer_module.Float16Module = Float16Module
 
     monkeypatch.setitem(sys.modules, "megatron.core.distributed", distributed)
     monkeypatch.setitem(sys.modules, "megatron.core.distributed.fsdp", fsdp)
     monkeypatch.setitem(sys.modules, "megatron.core.distributed.fsdp.mcore_fsdp_adapter", adapter)
+    monkeypatch.setitem(sys.modules, "megatron.core.distributed.fsdp.src.megatron_fsdp", raw_fsdp)
     monkeypatch.setitem(sys.modules, "megatron.core.transformer.module", transformer_module)
 
     model = object()
 
-    assert unwrap_model(Wrapper(model)) is model
+    assert unwrap_model(Wrapper(MegatronFSDP(model))) is model
