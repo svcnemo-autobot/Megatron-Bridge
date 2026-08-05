@@ -207,7 +207,17 @@ class Gemma3SelfAttention(SelfAttention):
             final_rotary_pos_emb = rotary_pos_emb[1]
             if isinstance(attention_bias, tuple):
                 attention_bias = attention_bias[1]
-        return super().forward(
+        # When packed sequences are used (qkv_format=thd), TE requires the
+        # attention mask type to be padding or padding_causal. The VL model
+        # normally uses arbitrary (for bidirectional image attention), but
+        # arbitrary is incompatible with thd format. Switch to padding_causal
+        # for the duration of the forward call, then restore.
+        _restore_attn_mask_type = None
+        if packed_seq_params is not None and getattr(packed_seq_params, "qkv_format", None) == "thd":
+            _restore_attn_mask_type = self.attn_mask_type
+            self.attn_mask_type = AttnMaskType.padding_causal
+
+        result = super().forward(
             hidden_states=hidden_states,
             attention_mask=attention_mask,
             key_value_states=key_value_states,
@@ -220,6 +230,11 @@ class Gemma3SelfAttention(SelfAttention):
             sequence_len_offset=sequence_len_offset,
             inference_params=inference_params,
         )
+
+        if _restore_attn_mask_type is not None:
+            self.attn_mask_type = _restore_attn_mask_type
+
+        return result
 
 
 class Gemma3TEDotProductAttention(TEDotProductAttention):
