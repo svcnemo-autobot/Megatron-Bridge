@@ -46,3 +46,50 @@ def test_unwrap_model_ignores_non_type_module_instances():
     wrapper = Wrapper(model)
 
     assert unwrap_model(wrapper, module_instances=(Wrapper, Mock())) is model
+
+
+@pytest.mark.parametrize("adapter_layout", ["versioned", "legacy"])
+def test_unwrap_model_default_supports_fsdp_adapter_layout(monkeypatch, adapter_layout):
+    import sys
+    from types import ModuleType
+
+    class Wrapper:
+        def __init__(self, module):
+            self.module = module
+
+    class OtherWrapper(Wrapper):
+        pass
+
+    class DistributedDataParallel(Wrapper):
+        pass
+
+    class TorchFullyShardedDataParallel(Wrapper):
+        pass
+
+    class Float16Module(Wrapper):
+        pass
+
+    adapter = ModuleType("megatron.core.distributed.fsdp.mcore_fsdp_adapter")
+    if adapter_layout == "versioned":
+        adapter.FullyShardedDataParallelV1 = Wrapper
+        adapter.FullyShardedDataParallelV2 = OtherWrapper
+        adapter.FullyShardedDataParallel = Mock()
+    else:
+        adapter.FullyShardedDataParallel = Wrapper
+
+    distributed = ModuleType("megatron.core.distributed")
+    distributed.DistributedDataParallel = DistributedDataParallel
+    distributed.TorchFullyShardedDataParallel = TorchFullyShardedDataParallel
+    fsdp = ModuleType("megatron.core.distributed.fsdp")
+    fsdp.mcore_fsdp_adapter = adapter
+    transformer_module = ModuleType("megatron.core.transformer.module")
+    transformer_module.Float16Module = Float16Module
+
+    monkeypatch.setitem(sys.modules, "megatron.core.distributed", distributed)
+    monkeypatch.setitem(sys.modules, "megatron.core.distributed.fsdp", fsdp)
+    monkeypatch.setitem(sys.modules, "megatron.core.distributed.fsdp.mcore_fsdp_adapter", adapter)
+    monkeypatch.setitem(sys.modules, "megatron.core.transformer.module", transformer_module)
+
+    model = object()
+
+    assert unwrap_model(Wrapper(model)) is model

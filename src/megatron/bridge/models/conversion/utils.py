@@ -39,20 +39,27 @@ def mcore_to_hf_window_size(window_size: int | list[int] | tuple[int, int] | Non
     return window_size
 
 
+def _get_default_module_instances() -> tuple[type, ...]:
+    """Return model wrapper types exported by the installed MCore adapter."""
+    from megatron.core.distributed import DistributedDataParallel as DDP
+    from megatron.core.distributed import TorchFullyShardedDataParallel as torch_FSDP
+    from megatron.core.distributed.fsdp import mcore_fsdp_adapter
+    from megatron.core.transformer.module import Float16Module
+
+    fsdp_types = tuple(
+        wrapper_type
+        for name in ("FullyShardedDataParallelV1", "FullyShardedDataParallelV2", "FullyShardedDataParallel")
+        if isinstance((wrapper_type := getattr(mcore_fsdp_adapter, name, None)), type)
+    )
+    return (DDP, torch_FSDP, *fsdp_types, Float16Module)
+
+
 def unwrap_model(model, module_instances=None):
     """Unwrap a model (or list of models) to the underlying module.
     Extends ``megatron.core.utils.unwrap_model`` with awareness of ``MegatronFSDP``.
     """
     if module_instances is None:
-        from megatron.core.distributed import DistributedDataParallel as DDP
-        from megatron.core.distributed import TorchFullyShardedDataParallel as torch_FSDP
-        from megatron.core.distributed.fsdp.mcore_fsdp_adapter import (
-            FullyShardedDataParallelV1,
-            FullyShardedDataParallelV2,
-        )
-        from megatron.core.transformer.module import Float16Module
-
-        module_instances = (DDP, torch_FSDP, FullyShardedDataParallelV1, FullyShardedDataParallelV2, Float16Module)
+        module_instances = _get_default_module_instances()
 
     return_list = True
     if not isinstance(model, list):
