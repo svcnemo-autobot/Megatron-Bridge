@@ -16,10 +16,9 @@ from megatron.bridge.training.gpt_step import forward_step
 from megatron.bridge.training.pretrain import pretrain
 from megatron.bridge.recipes.qwen import qwen25_500m_pretrain_config
 
-
 class MyCallback(Callback):
     def on_train_start(self, context):
-        context.user_state["start_time"] = time.time()
+        context.user_state['start_time'] = time.time()
         print(f"Training started at step {context.state.train_state.step}")
 
     def on_train_step_end(self, context):
@@ -27,9 +26,8 @@ class MyCallback(Callback):
             print(f"Step {context.state.train_state.step}: loss={context.loss_dict}")
 
     def on_train_end(self, context):
-        elapsed = time.time() - context.user_state["start_time"]
+        elapsed = time.time() - context.user_state['start_time']
         print(f"Training completed in {elapsed:.2f}s")
-
 
 # Create a config that fits on a single GPU
 config = qwen25_500m_pretrain_config()
@@ -48,12 +46,10 @@ from megatron.bridge.training.gpt_step import forward_step
 from megatron.bridge.training.pretrain import pretrain
 from megatron.bridge.recipes.qwen import qwen25_500m_pretrain_config
 
-
 def log_step(context):
     step = context.state.train_state.step
     if context.loss_dict:
         print(f"Step {step}: {context.loss_dict}")
-
 
 callback_manager = CallbackManager()
 callback_manager.register("on_train_step_end", log_step)
@@ -149,10 +145,10 @@ The `CallbackManager` owns a `user_state` dictionary that persists across all ca
 ```python
 class StepCounterCallback(Callback):
     def on_train_start(self, context):
-        context.user_state["callback_step_count"] = 0
+        context.user_state['callback_step_count'] = 0
 
     def on_train_step_end(self, context):
-        context.user_state["callback_step_count"] += 1
+        context.user_state['callback_step_count'] += 1
 
     def on_train_end(self, context):
         print(f"Callback saw {context.user_state['callback_step_count']} steps")
@@ -164,7 +160,6 @@ Callbacks fire on **all ranks** without framework-level synchronization. If your
 
 ```python
 import torch.distributed as dist
-
 
 class RankZeroCallback(Callback):
     def on_train_step_end(self, context):
@@ -237,14 +232,12 @@ class ProprietaryMetricsCallback(Callback):
 
     def on_train_step_end(self, context):
         if context.loss_dict:
-            self.client.send(
-                {
-                    "step": context.state.train_state.step,
-                    "loss": context.loss_dict.get("lm loss"),
-                    "grad_norm": context.grad_norm,
-                    "cluster_id": os.environ.get("CLUSTER_ID"),
-                }
-            )
+            self.client.send({
+                "step": context.state.train_state.step,
+                "loss": context.loss_dict.get("lm loss"),
+                "grad_norm": context.grad_norm,
+                "cluster_id": os.environ.get("CLUSTER_ID"),
+            })
 ```
 
 ## API Reference

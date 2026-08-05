@@ -27,7 +27,7 @@ config = ConfigContainer(
     # ... other config parameters
 )
 
-# Configure with FP16 mixed precision
+# Configure with FP16 mixed precision  
 config = ConfigContainer(
     mixed_precision="fp16_mixed",
     # ... other config parameters
@@ -158,7 +158,7 @@ fp8_config = MixedPrecisionConfig(
     params_dtype=torch.bfloat16,
     pipeline_dtype=torch.bfloat16,
     fp8="hybrid",
-    fp8_recipe="tensorwise",
+    fp8_recipe="tensorwise", 
     fp8_margin=0,
     fp8_amax_history_len=1024,
     fp8_amax_compute_algo="max",
@@ -178,7 +178,6 @@ You can also register your own custom mixed precision configurations to work wit
 ```python
 from megatron.bridge.training.mixed_precision import register, MixedPrecisionConfig
 
-
 @register
 def my_custom_fp8_recipe() -> MixedPrecisionConfig:
     """Custom FP8 recipe with specific settings for my use case."""
@@ -189,7 +188,6 @@ def my_custom_fp8_recipe() -> MixedPrecisionConfig:
         fp8_param_gather=True,
         # ... other custom settings
     )
-
 
 # Now you can use it with the utility function
 config = get_mixed_precision_config("my_custom_fp8_recipe")

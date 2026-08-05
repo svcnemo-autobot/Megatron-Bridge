@@ -80,11 +80,14 @@ class MegatronCausalLlamaBridge(MegatronModelBridge):
             hidden_size=hf_pretrained.config.hidden_size,
             # ... more config mapping
         )
-
+    
     def mapping_registry(self):
         # Define weight mappings
         return MegatronMappingRegistry(
-            AutoMapping(megatron_param="embedding.word_embeddings.weight", hf_param="model.embed_tokens.weight"),
+            AutoMapping(
+                megatron_param="embedding.word_embeddings.weight",
+                hf_param="model.embed_tokens.weight"
+            ),
             # ... more mappings
         )
 ```
@@ -171,13 +174,13 @@ Create custom param mappings for special formats:
 
 ```python
 class MyCustomMapping(MegatronParamMapping):
-    def hf_to_megatron(self, hf_weights, megatron_module):
+   def hf_to_megatron(self, hf_weights, megatron_module):
         # Custom transformation logic
         transformed = my_transform(hf_weights)
         # Use provided helpers for distribution
         return self.scatter_to_tp_ranks(transformed, dim=0)
 
-    def megatron_to_hf(self, megatron_weights, module):
+   def megatron_to_hf(self, megatron_weights, module):
         # Gather and inverse transform
         gathered = self.gather_from_tp_ranks(megatron_weights, dim=0)
         return {"custom_weight": my_inverse_transform(gathered)}
@@ -233,7 +236,9 @@ To add support for a new model architecture:
 
 4. **Register Custom Modules** (if needed)
    ```python
-   AutoMapping.register_module_type("YourColumnParallelLinear", "column")
+   AutoMapping.register_module_type(
+       "YourColumnParallelLinear", "column"
+   )
    ```
 
 ## Implementation Examples
@@ -247,20 +252,20 @@ The Llama implementation demonstrates key patterns:
 if is_llama_3_1_config(config):
     # Handle RoPE scaling
     rotary_base = config.rope_scaling["rope_type"] == "llama3"
-
+    
 # QKV fusion with proper head ordering
 QKVMapping(
     megatron_param="decoder.layers.*.self_attention.linear_qkv.weight",
     q="model.layers.*.self_attn.q_proj.weight",
-    k="model.layers.*.self_attn.k_proj.weight",
-    v="model.layers.*.self_attn.v_proj.weight",
+    k="model.layers.*.self_attn.k_proj.weight", 
+    v="model.layers.*.self_attn.v_proj.weight"
 )
 
 # Gated MLP handling
 GatedMLPMapping(
     megatron_param="decoder.layers.*.mlp.linear_fc1.weight",
     gate="model.layers.*.mlp.gate_proj.weight",
-    up="model.layers.*.mlp.up_proj.weight",
+    up="model.layers.*.mlp.up_proj.weight"
 )
 ```
 
@@ -285,7 +290,6 @@ GatedMLPMapping(
 ```python
 # Enable verbose logging
 import logging
-
 logging.getLogger("megatron.bridge.models").setLevel(logging.DEBUG)
 
 # Inspect mappings

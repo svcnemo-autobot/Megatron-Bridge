@@ -94,7 +94,8 @@ def get_module_by_name(
     model: torch.nn.Module,
     name: str,
     default: torch.nn.Module | None = None,
-) -> torch.nn.Module | None: ...
+) -> torch.nn.Module | None:
+    ...
 ```
 
 ### Mypy
@@ -123,7 +124,6 @@ by mistake, use `*` to force keyword-only arguments.
 ```python
 # Don't
 def scatter_weights(tensor: Tensor, tp_group: ProcessGroup, ep_group: ProcessGroup): ...
-
 
 # Do
 def scatter_weights(tensor: Tensor, *, tp_group: ProcessGroup, ep_group: ProcessGroup): ...
@@ -193,7 +193,6 @@ else:
 def make_config(*args):
     x, y = args
     return dict(**locals())
-
 
 # Do
 def make_config(x, y):

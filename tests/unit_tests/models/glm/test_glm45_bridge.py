@@ -269,13 +269,10 @@ class TestGLM45Bridge:
         """Test fused expert layout is detected from HF state source without enumerating all keys."""
         source = mock_pretrained_355b.state.source
         source.get_all_keys.side_effect = AssertionError("mapping registry should not enumerate all HF keys")
-        source.has_glob.side_effect = lambda pattern: (
-            pattern
-            in {
-                "*mlp.experts.gate_up_proj*",
-                "*mlp.experts.down_proj*",
-            }
-        )
+        source.has_glob.side_effect = lambda pattern: pattern in {
+            "*mlp.experts.gate_up_proj*",
+            "*mlp.experts.down_proj*",
+        }
 
         bridge = GLM45Bridge()
         bridge.hf_pretrained = mock_pretrained_355b

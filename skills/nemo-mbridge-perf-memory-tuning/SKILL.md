@@ -307,7 +307,6 @@ Quick check that `expandable_segments:True` is active:
 
 ```python
 import os
-
 assert "expandable_segments:True" in os.environ.get("PYTORCH_CUDA_ALLOC_CONF", "")
 ```
 

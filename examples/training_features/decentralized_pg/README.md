@@ -87,10 +87,10 @@ grid = HyperCommGrid(
 )
 
 # Create process groups by selecting dimensions
-tp_pg = grid.create_pg(["tp"])  # Ranks differ only in TP dimension
-pp_pg = grid.create_pg(["pp"])  # Ranks differ only in PP dimension
-dp_pg = grid.create_pg(["dp"])  # Ranks differ only in DP dimension
-mp_pg = grid.create_pg(["tp", "pp"])  # Model parallel = TP + PP
+tp_pg = grid.create_pg(["tp"])      # Ranks differ only in TP dimension
+pp_pg = grid.create_pg(["pp"])      # Ranks differ only in PP dimension
+dp_pg = grid.create_pg(["dp"])      # Ranks differ only in DP dimension
+mp_pg = grid.create_pg(["tp", "pp"]) # Model parallel = TP + PP
 
 # Bundle into ProcessGroupCollection
 pg_collection = ProcessGroupCollection(

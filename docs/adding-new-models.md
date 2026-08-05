@@ -141,12 +141,10 @@ Notes:
 - Use `*` wildcards for per-layer patterns; the number of wildcards must match between `megatron_param` and the HF pattern(s).
 - `*` typically captures layer indices; `**` can match across dots. For example, to map both `.weight` and `.bias` together:
   ```python
-  (
-      AutoMapping(
-          megatron_param="output_layer.**",
-          hf_param="lm_head.**",
-      ),
-  )
+  AutoMapping(
+      megatron_param="output_layer.**",
+      hf_param="lm_head.**",
+  ),
   ```
 - In some cases, the same module can have different Megatron parameter names depending on whether you use the Transformer Engine backend or the PyTorch backend. In that case, list both mappings, e.g., `[AutoMapping(megatron_param="te_backend_name", hf_param="hf_name"), AutoMapping(megatron_param="pytorch_backend_name", hf_param="hf_name")]`. Multiple Megatron parameters can map to the same Hugging Face parameter because, during conversion, the registry only queries the current model's module names.
 - Prefer `AutoMapping` when the Megatron layer type implies the TP split automatically.
@@ -286,7 +284,6 @@ Provide `-k your_model` selectors and guard long tests with `pytest.skip` if ext
 Enable verbose logs:
 ```python
 import logging
-
 logging.getLogger("megatron.bridge").setLevel(logging.DEBUG)
 ```
 

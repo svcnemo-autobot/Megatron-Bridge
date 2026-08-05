@@ -63,10 +63,10 @@ Read these from the correct config level:
 
 ```python
 @MegatronModelBridge.register_bridge(
-    source="MyModelForConditionalGeneration",  # HF class name (string if not importable)
-    target=MyVLModel,  # Megatron model class
-    provider=MyVLModelProvider,  # Provider class
-    model_type="my_model",  # HF model_type for export
+    source="MyModelForConditionalGeneration",   # HF class name (string if not importable)
+    target=MyVLModel,                            # Megatron model class
+    provider=MyVLModelProvider,                  # Provider class
+    model_type="my_model",                       # HF model_type for export
 )
 class MyVLBridge(MegatronModelBridge):
     def provider_bridge(self, hf_pretrained: PreTrainedCausalLM) -> MyVLModelProvider:
@@ -92,10 +92,10 @@ class MyVLBridge(MegatronModelBridge):
     def mapping_registry(self) -> MegatronMappingRegistry:
         return MegatronMappingRegistry(
             # Language model mappings (prefixed with language_model.*)
-            AutoMapping(
-                megatron_param="language_model.embedding.word_embeddings.weight", hf_param="model.embed_tokens.weight"
-            ),
-            AutoMapping(megatron_param="language_model.output_layer.weight", hf_param="model.lm_head.weight"),
+            AutoMapping(megatron_param="language_model.embedding.word_embeddings.weight",
+                       hf_param="model.embed_tokens.weight"),
+            AutoMapping(megatron_param="language_model.output_layer.weight",
+                       hf_param="model.lm_head.weight"),
             # ... language decoder layers ...
             QKVMapping(
                 megatron_param="language_model.decoder.layers.*.self_attention.linear_qkv.weight",
@@ -104,9 +104,8 @@ class MyVLBridge(MegatronModelBridge):
                 v="model.language_model.layers.*.self_attn.v_proj.weight",
             ),
             # Vision model mappings
-            AutoMapping(
-                megatron_param="vision_model.patch_embed.proj.**", hf_param="model.visual.patch_embed.proj.**"
-            ),
+            AutoMapping(megatron_param="vision_model.patch_embed.proj.**",
+                       hf_param="model.visual.patch_embed.proj.**"),
             # ... vision layers ...
         )
 ```

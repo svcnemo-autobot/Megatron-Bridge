@@ -319,13 +319,13 @@ if os.environ.get("WORLD_SIZE") is None and os.environ.get("SLURM_NTASKS") is No
 Bridge's `common_utils.py` helpers (called by `initialize.py`) populate env vars from SLURM:
 ```python
 if "RANK" not in os.environ:
-    os.environ["RANK"] = str(get_rank_safe())  # uses SLURM_PROCID
+    os.environ["RANK"] = str(get_rank_safe())          # uses SLURM_PROCID
 if "WORLD_SIZE" not in os.environ:
     os.environ["WORLD_SIZE"] = str(get_world_size_safe())  # uses SLURM_NTASKS
 if "MASTER_ADDR" not in os.environ:
-    os.environ["MASTER_ADDR"] = get_master_addr_safe()  # parses SLURM_NODELIST
+    os.environ["MASTER_ADDR"] = get_master_addr_safe()     # parses SLURM_NODELIST
 if "MASTER_PORT" not in os.environ:
-    os.environ["MASTER_PORT"] = str(get_master_port_safe())  # derives from SLURM_JOB_ID
+    os.environ["MASTER_PORT"] = str(get_master_port_safe()) # derives from SLURM_JOB_ID
 ```
 
 ---

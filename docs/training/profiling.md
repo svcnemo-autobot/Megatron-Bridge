@@ -53,7 +53,7 @@ cfg.profiling = ProfilingConfig(
     profile_step_start=10,
     profile_step_end=15,
     profile_ranks=[0, 1],  # Profile first two ranks
-    record_shapes=False,  # Optional: record tensor shapes
+    record_shapes=False,   # Optional: record tensor shapes
 )
 ```
 
@@ -119,7 +119,7 @@ cfg.profiling = ProfilingConfig(
     profile_step_start=10,
     profile_step_end=15,
     profile_ranks=[0],
-    record_shapes=True,  # Record tensor shapes for detailed analysis
+    record_shapes=True,    # Record tensor shapes for detailed analysis
 )
 ```
 

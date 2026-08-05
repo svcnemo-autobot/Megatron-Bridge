@@ -42,7 +42,10 @@ All models are ready for commercial use and support context lengths up to 128K t
 from megatron.bridge import AutoBridge
 
 # Example: Llama-3.3-Nemotron-Super-49B
-bridge = AutoBridge.from_hf_pretrained("nvidia/Llama-3_3-Nemotron-Super-49B-v1_5", trust_remote_code=True)
+bridge = AutoBridge.from_hf_pretrained(
+    "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5",
+    trust_remote_code=True
+)
 provider = bridge.to_megatron_provider()
 
 # Optionally configure parallelism before instantiating the model
@@ -69,7 +72,10 @@ model = provider.provide_distributed_model(wrap_with_ddp=False)
 from megatron.bridge import AutoBridge
 
 # Load the bridge from HF model ID
-bridge = AutoBridge.from_hf_pretrained("nvidia/Llama-3_3-Nemotron-Super-49B-v1_5", trust_remote_code=True)
+bridge = AutoBridge.from_hf_pretrained(
+    "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5",
+    trust_remote_code=True
+)
 
 # Export a trained Megatron checkpoint to HF format
 bridge.export_ckpt(

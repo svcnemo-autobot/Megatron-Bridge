@@ -44,8 +44,8 @@ from megatron.bridge.models import GPTModelProvider
 # Full recomputation - recompute all layers
 model_config = GPTModelProvider(
     recompute_granularity="full",  # Enable full layer recomputation
-    recompute_method="uniform",  # Uniform distribution across layers
-    recompute_num_layers=4,  # Number of layers per recomputation block
+    recompute_method="uniform",    # Uniform distribution across layers
+    recompute_num_layers=4,        # Number of layers per recomputation block
     # ... other model parameters
 )
 ```
@@ -58,8 +58,8 @@ Recomputes a specific number of transformer layers per pipeline stage:
 ```python
 model_config = GPTModelProvider(
     recompute_granularity="full",
-    recompute_method="block",  # Block-wise recomputation
-    recompute_num_layers=4,  # Recompute 4 layers per pipeline stage
+    recompute_method="block",      # Block-wise recomputation
+    recompute_num_layers=4,        # Recompute 4 layers per pipeline stage
 )
 ```
 
@@ -69,8 +69,8 @@ Uniformly divides the total number of transformer layers and recomputes input ac
 ```python
 model_config = GPTModelProvider(
     recompute_granularity="full",
-    recompute_method="uniform",  # Uniform distribution
-    recompute_num_layers=8,  # Number of layers per recomputation block
+    recompute_method="uniform",    # Uniform distribution
+    recompute_num_layers=8,        # Number of layers per recomputation block
 )
 ```
 
@@ -105,7 +105,7 @@ from megatron.bridge.models import GPTModelProvider
 
 model_config = GPTModelProvider(
     recompute_granularity="selective",  # Enable selective recomputation
-    recompute_modules=["core_attn"],  # Recompute attention modules (default)
+    recompute_modules=["core_attn"],    # Recompute attention modules (default)
     # ... other model parameters
 )
 ```
@@ -118,13 +118,13 @@ Megatron Bridge supports selective recomputation for various modules:
 model_config = GPTModelProvider(
     recompute_granularity="selective",
     recompute_modules=[
-        "core_attn",  # Core attention computation (default)
-        "mlp",  # MLP layers
-        "layernorm",  # Layer normalization
-        "moe",  # Mixture of Experts layers
-        "moe_act",  # MoE activation functions
-        "shared_experts",  # Shared expert layers
-        "mla_up_proj",  # Multi-Latent Attention up projection
+        "core_attn",      # Core attention computation (default)
+        "mlp",            # MLP layers
+        "layernorm",      # Layer normalization
+        "moe",            # Mixture of Experts layers
+        "moe_act",        # MoE activation functions
+        "shared_experts", # Shared expert layers
+        "mla_up_proj",    # Multi-Latent Attention up projection
     ],
 )
 ```
@@ -169,6 +169,7 @@ model_config = GPTModelProvider(
     # MoE configuration
     num_moe_experts=8,
     expert_model_parallel_size=2,
+    
     # MoE recomputation
     recompute_granularity="selective",
     recompute_modules=["moe", "moe_act"],  # Recompute MoE-specific modules

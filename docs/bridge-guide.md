@@ -179,7 +179,6 @@ bridge.save_hf_pretrained(megatron_model, "./my-fine-tuned-llama")
 
 # The saved model can be loaded with 🤗 Hugging Face
 from transformers import AutoModelForCausalLM
-
 hf_model = AutoModelForCausalLM.from_pretrained("./my-fine-tuned-llama")
 ```
 

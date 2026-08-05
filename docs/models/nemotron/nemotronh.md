@@ -255,7 +255,7 @@ cfg = nemotronh_47b_peft_config(
     train_iters=1000,
     global_batch_size=128,
     finetune_lr=1e-4,
-)
+) 
 ```
 
 ### Nemotron H 56B Finetuning

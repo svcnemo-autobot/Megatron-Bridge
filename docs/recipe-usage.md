@@ -261,7 +261,6 @@ from megatron.bridge.recipes.run_plugins import (
     PreemptionPluginScriptArgs,
 )
 
-
 # Define a custom converter for argparse-style arguments
 def argparse_preemption_converter(args: PreemptionPluginScriptArgs) -> List[str]:
     result = []
@@ -270,7 +269,6 @@ def argparse_preemption_converter(args: PreemptionPluginScriptArgs) -> List[str]
     if args.enable_exit_handler_for_data_loader:
         result.append("--enable-exit-handler-dataloader")
     return result
-
 
 if __name__ == "__main__":
     train_script = run.Script(path="/path/to/train/script.py", entrypoint="python")

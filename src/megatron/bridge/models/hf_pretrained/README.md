@@ -37,12 +37,16 @@ For text generation models (GPT, LLaMA, etc.)
 from megatron.bridge.models.hf_pretrained import PreTrainedCausalLM
 
 # Type-safe loading with lazy evaluation
-llama = PreTrainedCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf", torch_dtype=torch.float16, device="cuda")
+llama = PreTrainedCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    torch_dtype=torch.float16,
+    device="cuda"
+)
 
 # Components load on demand
-config = llama.config  # Loads just config
-tokenizer = llama.tokenizer  # Loads just tokenizer
-model = llama.model  # Loads model weights
+config = llama.config        # Loads just config
+tokenizer = llama.tokenizer  # Loads just tokenizer  
+model = llama.model          # Loads model weights
 ```
 
 ### PreTrainedMaskedLM
@@ -82,7 +86,7 @@ Components load only when accessed, saving memory:
 model = PreTrainedCausalLM.from_pretrained("gpt2")
 
 # Still nothing loaded - just returns the config
-config = model.config
+config = model.config  
 
 # Now the model weights are loaded
 outputs = model.generate(...)
@@ -106,6 +110,6 @@ import re
 
 # Works for any model type
 model.state["*.attention.*.weight"]  # Get attention weights
-model.state[re.compile(r".*\.bias$")]  # Find all biases
-model.state["*.layer.*.weight"]  # Pattern matching
+model.state[re.compile(r".*\.bias$")] # Find all biases
+model.state["*.layer.*.weight"]        # Pattern matching
 ```
