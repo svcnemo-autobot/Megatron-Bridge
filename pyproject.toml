@@ -150,12 +150,50 @@ override-dependencies = [
 name = "nvidia"
 url = "https://pypi.nvidia.com"
 
-# flash-mla ships no PyPI wheel and builds against torch/CUDA; provide its metadata so the
-# resolver does not have to build it at lock time. Pin matches 3rdparty/Megatron-LM.
+# GPU extension metadata is not inherited from the local Megatron-LM project. Provide it
+# here so the root lock refresh does not compile CUDA extensions just to inspect them.
+[[tool.uv.dependency-metadata]]
+name = "flash-mla"
+version = "1.0.0+9edee0c"
+requires-dist = []
+
 [[tool.uv.dependency-metadata]]
 name = "flash-mla"
 version = "1.0.0+b7643bd"
 requires-dist = []
+
+[[tool.uv.dependency-metadata]]
+name = "transformer-engine"
+version = "2.17.1+4329ff84"
+requires-dist = [
+    "pydantic<2.14",
+    "importlib-metadata>=1.0",
+    "packaging",
+    "torch>=2.1",
+    "einops",
+    "onnxscript",
+    "onnx",
+    "nvdlfw-inspect",
+]
+
+[[tool.uv.dependency-metadata]]
+name = "transformer-engine"
+version = "2.14.0+f031cf87"
+requires-dist = [
+    "einops",
+    "importlib-metadata",
+    "nvdlfw-inspect",
+    "onnx",
+    "onnxscript",
+    "packaging",
+    "pydantic",
+    "torch",
+]
+
+[[tool.uv.dependency-metadata]]
+name = "fast-hadamard-transform"
+version = "1.0.4.post1"
+requires-dist = ["torch", "packaging", "ninja"]
 
 [tool.uv.sources]
 megatron-core = { path = "3rdparty/Megatron-LM/", editable = true }
