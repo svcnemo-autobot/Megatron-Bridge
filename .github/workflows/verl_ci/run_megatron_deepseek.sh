@@ -25,9 +25,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-## Use our checkout
-pip3 install git+https://github.com/NVIDIA-NeMo/Megatron-Bridge.git@main --no-deps --no-build-isolation
-pip3 install git+https://github.com/NVIDIA/Megatron-LM.git@main --no-deps --no-build-isolation
+## Install this Bridge checkout and its matching reviewed MCore submodule pin.
+pip3 install file:///opt/Megatron-Bridge --no-deps --no-build-isolation
+pip3 install git+https://github.com/NVIDIA/Megatron-LM.git@2a75ac12c54ba6a42b34024756820bf819a2e25f --no-deps --no-build-isolation
 pip3 install "nvidia-modelopt[torch]>=0.37.0"
 pip3 install "transformers==5.12.1"
 ## cd to verl checkout root
