@@ -86,7 +86,7 @@ jobs:
       CONTAINER: verl_${{ github.run_id }}_${{ matrix.script }}
       VERL_IMAGE: ${{ vars.DEFAULT_CONTAINER_REGISTRY }}/dockerhub/verlai/verl:vllm020.dev1
       # Reviewed upstream verl revision. Keep third-party code immutable on self-hosted runners.
-      VERL_COMMIT: b256ebf83b304d83be5c1207fdf6867c04a0d077
+      VERL_COMMIT: b256ebf83b304d83be5c1207fdf6867c04a0d077 # pragma: allowlist secret
       TEST_DATA_PATH: ${{ vars.DEFAULT_TEST_DATA_PATH }}
       VERL_DATA_ROOT: /home/TestData/verl_ci
     steps:
