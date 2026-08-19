@@ -102,9 +102,11 @@ Before starting a CI job, verify:
 
 These scripts are discovered and run weekly by
 [`.github/workflows/verl-e2e-weekly.yml`](../verl-e2e-weekly.yml). That workflow
-globs every `run_*.sh` in this directory into a parallel matrix (one 8-GPU job per
-script), so adding a new `run_*.sh` here is picked up automatically with no
-workflow edit. The workflow reads two tuning headers from each script:
+pins the executed external verl checkout to a full commit SHA; updating that SHA
+requires a reviewed repository change. It globs every `run_*.sh` in this directory
+into a parallel matrix (one 8-GPU job per script). Adding a new `run_*.sh` here
+is picked up automatically with no workflow edit. The workflow reads two tuning
+headers from each script:
 
 - `# CI_TIMEOUT=<minutes>` — per-leg `timeout-minutes` (default 60).
 - `# GPU_COUNT=<n>` — selects the N-GPU runner label (default 8).

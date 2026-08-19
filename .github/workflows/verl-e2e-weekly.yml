@@ -22,11 +22,6 @@ on:
         description: "Run a single script (basename without .sh); empty = all run_*.sh"
         required: false
         type: string
-      verl_ref:
-        description: "verl git ref to check out"
-        required: false
-        type: string
-        default: main
 
 concurrency:
   group: ${{ github.workflow }}
@@ -90,7 +85,7 @@ jobs:
     env:
       CONTAINER: verl_${{ github.run_id }}_${{ matrix.script }}
       VERL_IMAGE: ${{ vars.DEFAULT_CONTAINER_REGISTRY }}/dockerhub/verlai/verl:vllm020.dev1
-      VERL_REF: ${{ github.event.inputs.verl_ref || 'main' }}
+      VERL_COMMIT: b256ebf83b304d83be5c1207fdf6867c04a0d077
       TEST_DATA_PATH: ${{ vars.DEFAULT_TEST_DATA_PATH }}
       VERL_DATA_ROOT: /home/TestData/verl_ci
     steps:
@@ -119,17 +114,20 @@ jobs:
         run: |
           docker exec \
             -e SCRIPT_PATH="/opt/Megatron-Bridge/.github/workflows/verl_ci/${{ matrix.script }}.sh" \
-            -e VERL_REF="$VERL_REF" \
+            -e VERL_COMMIT="$VERL_COMMIT" \
             -e VERL_DATA_ROOT="$VERL_DATA_ROOT" \
             "$CONTAINER" bash -euxo pipefail -c '
               export HOME=/tmp/verl_home
               mkdir -p "$HOME"
               # Reproduce verl runner layout: $HOME/models/<org>/<name> + $HOME/models/hf_data/gsm8k
               ln -sfn "$VERL_DATA_ROOT/models" "$HOME/models"
-              git clone https://github.com/verl-project/verl.git /workspace/verl
+              rm -rf /workspace/verl
+              git init /workspace/verl
+              git -C /workspace/verl remote add origin https://github.com/verl-project/verl.git
+              git -C /workspace/verl fetch --depth 1 origin "$VERL_COMMIT"
+              git -C /workspace/verl checkout --detach FETCH_HEAD
+              test "$(git -C /workspace/verl rev-parse HEAD)" = "$VERL_COMMIT"
               cd /workspace/verl
-              git checkout "$VERL_REF"
-              git rev-parse HEAD
               bash "$SCRIPT_PATH"
             '
 
