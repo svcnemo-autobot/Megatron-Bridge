@@ -144,10 +144,11 @@ RUN --mount=type=bind,from=vllm_wheel,source=/src/vllm/,target=/tmp/vllm/ \
 ## not invalidate the CUDA-toolkit or vLLM layer caches.
 ##############################################################################
 
-ARG AWS_OFI_NCCL_VERSION=v1.17.3
+# Immutable commit behind the reviewed v1.17.3 release tag.
+ARG AWS_OFI_NCCL_COMMIT=93fa84ca880325013b2f639356bbb60f075148af
 
 RUN --mount=type=bind,source=docker/common/install_aws_ofi_nccl.sh,target=/opt/install_aws_ofi_nccl.sh \
-    bash /opt/install_aws_ofi_nccl.sh --AWS_OFI_NCCL_VER=$AWS_OFI_NCCL_VERSION
+    bash /opt/install_aws_ofi_nccl.sh --AWS_OFI_NCCL_COMMIT=$AWS_OFI_NCCL_COMMIT
 
 ##############################################################################
 ##

@@ -26,15 +26,21 @@
 
 set -euo pipefail
 
-AWS_OFI_NCCL_VER="v1.17.3"
+# Immutable commit behind the reviewed v1.17.3 release tag.
+AWS_OFI_NCCL_COMMIT="93fa84ca880325013b2f639356bbb60f075148af"
 
 for i in "$@"; do
     case $i in
-        --AWS_OFI_NCCL_VER=?*) AWS_OFI_NCCL_VER="${i#*=}";;
+        --AWS_OFI_NCCL_COMMIT=?*) AWS_OFI_NCCL_COMMIT="${i#*=}";;
         *) ;;
     esac
     shift
 done
+
+if ! [[ "${AWS_OFI_NCCL_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "AWS_OFI_NCCL_COMMIT must be a lowercase 40-character Git commit SHA" >&2
+    exit 1
+fi
 
 PREFIX="/opt/amazon/ofi-nccl"
 SRC_DIR="$(mktemp -d)"
@@ -45,8 +51,11 @@ apt-get install -y --no-install-recommends \
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-git clone --depth 1 --branch "${AWS_OFI_NCCL_VER}" \
-    https://github.com/aws/aws-ofi-nccl.git "${SRC_DIR}"
+git -C "${SRC_DIR}" init --quiet
+git -C "${SRC_DIR}" remote add origin https://github.com/aws/aws-ofi-nccl.git
+git -C "${SRC_DIR}" fetch --depth 1 origin "${AWS_OFI_NCCL_COMMIT}"
+git -C "${SRC_DIR}" checkout --detach FETCH_HEAD
+test "$(git -C "${SRC_DIR}" rev-parse HEAD)" = "${AWS_OFI_NCCL_COMMIT}"
 
 pushd "${SRC_DIR}"
 ./autogen.sh
