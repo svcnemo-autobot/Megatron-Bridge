@@ -26,11 +26,11 @@
 
 set -euo pipefail
 
-AWS_OFI_NCCL_VER="v1.17.3"
+AWS_OFI_NCCL_COMMIT="13383fa86cd5a13e57b2835390ba089a384e398c"
 
 for i in "$@"; do
     case $i in
-        --AWS_OFI_NCCL_VER=?*) AWS_OFI_NCCL_VER="${i#*=}";;
+        --AWS_OFI_NCCL_COMMIT=?*) AWS_OFI_NCCL_COMMIT="${i#*=}";;
         *) ;;
     esac
     shift
@@ -45,8 +45,11 @@ apt-get install -y --no-install-recommends \
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
-git clone --depth 1 --branch "${AWS_OFI_NCCL_VER}" \
+git clone --filter=blob:none --no-checkout \
     https://github.com/aws/aws-ofi-nccl.git "${SRC_DIR}"
+git -C "${SRC_DIR}" fetch --depth 1 origin "${AWS_OFI_NCCL_COMMIT}"
+git -C "${SRC_DIR}" checkout --detach FETCH_HEAD
+test "$(git -C "${SRC_DIR}" rev-parse HEAD)" = "${AWS_OFI_NCCL_COMMIT}"
 
 pushd "${SRC_DIR}"
 ./autogen.sh

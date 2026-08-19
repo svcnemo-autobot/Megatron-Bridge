@@ -83,11 +83,11 @@ RUN --mount=type=bind,source=docker/patches/deepep.patch,target=/opt/deepep.patc
     mkdir -p ${RDMA_CORE_HOME} && \
     ln -sfn /usr/include ${RDMA_CORE_HOME}/include && \
     ln -sfn /usr/lib/${ARCH_LIB} ${RDMA_CORE_HOME}/lib && \
-    git clone https://github.com/deepseek-ai/DeepEP.git && \
+    git clone --filter=blob:none --no-checkout https://github.com/deepseek-ai/DeepEP.git && \
     pushd DeepEP && \
-        git pull && \
-        git fetch origin $DEEPEP_COMMIT && \
-        git checkout FETCH_HEAD && \
+        git fetch --depth 1 origin "$DEEPEP_COMMIT" && \
+        git checkout --detach FETCH_HEAD && \
+        test "$(git rev-parse HEAD)" = "$DEEPEP_COMMIT" && \
         patch -p1 < /opt/deepep.patch && \
         if [ "$REINSTALL_NVSHMEM" = "True" ]; then \
             pip install --no-cache-dir nvidia-nvshmem-cu13==3.6.5 && \

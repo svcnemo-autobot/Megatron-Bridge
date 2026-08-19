@@ -33,16 +33,17 @@ ENV NVIDIA_PRODUCT_NAME="NeMo Framework" \
 
 FROM base AS vllm_wheel
 
-ARG VLLM_VERSION=v0.14.1
+ARG VLLM_COMMIT=d7de043d55d1dd629554467e23874097e1c48993
 ARG MAX_JOBS=4
-ENV VLLM_VERSION=$VLLM_VERSION
 
 # Build vllm
 RUN mkdir -p /src/vllm && \
-    git clone https://github.com/vllm-project/vllm.git /src/vllm && \
+    git clone --filter=blob:none --no-checkout https://github.com/vllm-project/vllm.git /src/vllm && \
     cd /src/vllm && \
-    echo "Building vLLM version: $VLLM_VERSION" && \
-    git checkout $VLLM_VERSION && \
+    echo "Building vLLM commit: $VLLM_COMMIT" && \
+    git fetch --depth 1 origin "$VLLM_COMMIT" && \
+    git checkout --detach FETCH_HEAD && \
+    test "$(git rev-parse HEAD)" = "$VLLM_COMMIT" && \
     python use_existing_torch.py && \
     pip install -r requirements/build/cuda.txt && \
     pip wheel --no-deps --no-build-isolation -v .
@@ -144,10 +145,10 @@ RUN --mount=type=bind,from=vllm_wheel,source=/src/vllm/,target=/tmp/vllm/ \
 ## not invalidate the CUDA-toolkit or vLLM layer caches.
 ##############################################################################
 
-ARG AWS_OFI_NCCL_VERSION=v1.17.3
+ARG AWS_OFI_NCCL_COMMIT=13383fa86cd5a13e57b2835390ba089a384e398c
 
 RUN --mount=type=bind,source=docker/common/install_aws_ofi_nccl.sh,target=/opt/install_aws_ofi_nccl.sh \
-    bash /opt/install_aws_ofi_nccl.sh --AWS_OFI_NCCL_VER=$AWS_OFI_NCCL_VERSION
+    bash /opt/install_aws_ofi_nccl.sh --AWS_OFI_NCCL_COMMIT=$AWS_OFI_NCCL_COMMIT
 
 ##############################################################################
 ##

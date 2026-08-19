@@ -6,7 +6,7 @@ workflow="${2:-.github/workflows/cicd-main.yml}"
 fw_final_dockerfile="${3:-docker/Dockerfile.fw_final}"
 
 baseline_arg_line=$(grep -n '^ARG BASELINE_MCORE_REF$' "$dockerfile" | cut -d: -f1)
-baseline_clone_line=$(grep -n 'git clone --filter=blob:none --no-checkout' "$dockerfile" | cut -d: -f1)
+baseline_clone_line=$(grep -n 'git clone --filter=blob:none --no-checkout https://github.com/NVIDIA/Megatron-LM.git' "$dockerfile" | cut -d: -f1)
 baseline_line=$(grep -n 'Install the main-branch environment from an immutable baseline context' "$dockerfile" | cut -d: -f1)
 dispatched_copy_line=$(grep -n '^COPY 3rdparty/Megatron-LM /opt/Megatron-Bridge/3rdparty/Megatron-LM$' "$dockerfile" | cut -d: -f1)
 delta_line=$(grep -n 'syncing the dispatched dependency delta' "$dockerfile" | cut -d: -f1)
@@ -27,12 +27,30 @@ trap 'rm -rf "$temporary_dir"' EXIT
 
 fw_final_from_line=$(grep -n '^FROM ${NEMO_FW_FINAL_BASE_IMAGE} AS nemo_fw_final$' "$fw_final_dockerfile" | cut -d: -f1)
 fw_final_root_line=$(grep -n '^USER root$' "$fw_final_dockerfile" | cut -d: -f1)
-fw_final_clone_line=$(grep -n '^RUN git clone --depth 1 https://github.com/NVIDIA-NeMo/NeMo.git' "$fw_final_dockerfile" | cut -d: -f1)
+fw_final_clone_line=$(grep -n '^RUN set -eux; \\' "$fw_final_dockerfile" | cut -d: -f1)
 [[ -n "$fw_final_from_line" ]]
 [[ -n "$fw_final_root_line" ]]
 [[ -n "$fw_final_clone_line" ]]
 ((fw_final_from_line < fw_final_root_line))
 ((fw_final_root_line < fw_final_clone_line))
+
+# Every repository whose source is executed during an image build must be pinned
+# to an immutable commit and verified immediately after checkout.
+grep -Eq '^ARG VLLM_COMMIT=[0-9a-f]{40}$' docker/Dockerfile.fw_base
+grep -Eq '^ARG AWS_OFI_NCCL_COMMIT=[0-9a-f]{40}$' docker/Dockerfile.fw_base
+grep -Eq '^AWS_OFI_NCCL_COMMIT="[0-9a-f]{40}"$' docker/common/install_aws_ofi_nccl.sh
+grep -Eq '^ARG WANDB_COMMIT=[0-9a-f]{40}$' "$fw_final_dockerfile"
+if grep -E 'git clone.*--branch|git pull|git checkout \$[A-Z_]+|git checkout FETCH_HEAD' \
+    docker/Dockerfile.ci docker/Dockerfile.fw_base "$fw_final_dockerfile" \
+    docker/common/install_aws_ofi_nccl.sh; then
+  echo "Executable image-build source must use a verified immutable commit" >&2
+  exit 1
+fi
+test "$(grep -c 'test .*rev-parse HEAD' docker/Dockerfile.ci)" -ge 2
+test "$(grep -c 'test .*rev-parse HEAD' docker/Dockerfile.fw_base)" -ge 1
+test "$(grep -c 'test .*rev-parse HEAD' "$fw_final_dockerfile")" -ge 3
+test "$(grep -c 'test .*rev-parse HEAD' docker/common/install_aws_ofi_nccl.sh)" -eq 1
+
 
 grep -q -- '--mount=type=cache,target=/root/.cache/uv' "$dockerfile"
 if grep -q -- '--mount=type=secret,id=GH_TOKEN' "$dockerfile"; then

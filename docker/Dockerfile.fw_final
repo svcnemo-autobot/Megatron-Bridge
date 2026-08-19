@@ -26,36 +26,27 @@ WORKDIR /opt
 ##
 ##############################################################################
 
-# Clone FW repositories
-RUN git clone --depth 1 https://github.com/NVIDIA-NeMo/NeMo.git && \
-    git clone --depth 1 https://github.com/NVIDIA-NeMo/Export-Deploy.git && \
-    git clone --depth 1 https://github.com/NVIDIA-NeMo/Evaluator.git && \
-    git clone --depth 1 https://github.com/NVIDIA-NeMo/Run
-
+# Clone each framework repository at its immutable requested commit and verify it before use.
 ARG NEMO_COMMIT
 ARG NEMO_EXPORT_DEPLOY_COMMIT
 ARG NEMO_EVALUATOR_COMMIT
 ARG NEMO_RUN_COMMIT
 
-# Update FW repository commit
-RUN    pushd /opt/Export-Deploy && \
-        git pull && \
-        git fetch origin $NEMO_EXPORT_DEPLOY_COMMIT && \
-        git checkout FETCH_HEAD && \
-        echo "Container built with NeMo-Export-Deploy commit hash: $NEMO_EXPORT_DEPLOY_COMMIT" && \
-    popd && \
-    pushd /opt/Evaluator && \
-        git pull && \
-        git fetch origin $NEMO_EVALUATOR_COMMIT && \
-        git checkout FETCH_HEAD && \
-        echo "Container built with NeMo-Eval commit hash: $NEMO_EVALUATOR_COMMIT" && \
-    popd && \
-    pushd /opt/Run && \
-        git pull && \
-        git fetch origin $NEMO_RUN_COMMIT && \
-        git checkout FETCH_HEAD && \
-        echo "Container built with NeMo-Run commit hash: $NEMO_RUN_COMMIT" && \
-    popd
+RUN set -eux; \
+    for spec in \
+        "NeMo https://github.com/NVIDIA-NeMo/NeMo.git $NEMO_COMMIT" \
+        "Export-Deploy https://github.com/NVIDIA-NeMo/Export-Deploy.git $NEMO_EXPORT_DEPLOY_COMMIT" \
+        "Evaluator https://github.com/NVIDIA-NeMo/Evaluator.git $NEMO_EVALUATOR_COMMIT" \
+        "Run https://github.com/NVIDIA-NeMo/Run $NEMO_RUN_COMMIT"; do \
+        set -- $spec; \
+        name=$1; repo=$2; commit=$3; \
+        test -n "$commit"; \
+        git clone --filter=blob:none --no-checkout "$repo" "/opt/$name"; \
+        git -C "/opt/$name" fetch --depth 1 origin "$commit"; \
+        git -C "/opt/$name" checkout --detach FETCH_HEAD; \
+        test "$(git -C "/opt/$name" rev-parse HEAD)" = "$commit"; \
+        echo "Container built with $name commit hash: $commit"; \
+    done
 
 # Sync environment
 COPY --chmod=644 docker/common/fw_pyproject.toml /opt/NeMo-FW/pyproject.toml
@@ -103,14 +94,17 @@ RUN rm -rf /opt/pytorch/pytorch/third_party/onnx
 
 # Patch wandb-core with fixed gRPC-Go and Go standard-library versions.
 ARG TARGETARCH
+ARG WANDB_COMMIT=487c178a4f4a7981ce42859540543b13a9d7b7c2
 RUN GRPC_VERSION=1.82.1 && \
     GO_VERSION=1.26.5 && \
-    WANDB_VERSION=$(python3 -c "import wandb; print(wandb.__version__)") && \
     WANDB_CORE_BIN=/opt/venv/lib/python3.12/site-packages/wandb/bin/wandb-core && \
     curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-${TARGETARCH}.tar.gz" | tar -C /tmp -xz && \
     export PATH="/tmp/go/bin:$PATH" && \
     export GOPATH=/tmp/gopath && \
-    git clone --depth 1 --branch "v${WANDB_VERSION}" https://github.com/wandb/wandb.git /tmp/wandb-src && \
+    git clone --filter=blob:none --no-checkout https://github.com/wandb/wandb.git /tmp/wandb-src && \
+    git -C /tmp/wandb-src fetch --depth 1 origin "$WANDB_COMMIT" && \
+    git -C /tmp/wandb-src checkout --detach FETCH_HEAD && \
+    test "$(git -C /tmp/wandb-src rev-parse HEAD)" = "$WANDB_COMMIT" && \
     cd /tmp/wandb-src/core && \
     go get google.golang.org/grpc@v${GRPC_VERSION} && \
     go mod tidy && \
@@ -126,12 +120,14 @@ RUN GRPC_VERSION=1.82.1 && \
 RUN GO_GIT_VERSION=5.19.0 && \
     GRPC_VERSION=1.82.1 && \
     GO_VERSION=1.26.5 && \
-    WANDB_VERSION=$(/usr/bin/python3 -c "import wandb; print(wandb.__version__)") && \
     WANDB_CORE_BIN=/usr/local/lib/python3.12/dist-packages/wandb/bin/wandb-core && \
     curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-${TARGETARCH}.tar.gz" | tar -C /tmp -xz && \
     export PATH="/tmp/go/bin:$PATH" && \
     export GOPATH=/tmp/gopath && \
-    git clone --depth 1 --branch "v${WANDB_VERSION}" https://github.com/wandb/wandb.git /tmp/wandb-src && \
+    git clone --filter=blob:none --no-checkout https://github.com/wandb/wandb.git /tmp/wandb-src && \
+    git -C /tmp/wandb-src fetch --depth 1 origin "$WANDB_COMMIT" && \
+    git -C /tmp/wandb-src checkout --detach FETCH_HEAD && \
+    test "$(git -C /tmp/wandb-src rev-parse HEAD)" = "$WANDB_COMMIT" && \
     cd /tmp/wandb-src/core && \
     go get github.com/go-git/go-git/v5@v${GO_GIT_VERSION} && \
     go get google.golang.org/grpc@v${GRPC_VERSION} && \
