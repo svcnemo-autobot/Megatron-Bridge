@@ -912,13 +912,31 @@ class TestMimoOptimizerLoadCompat:
 
     def _make_mimo_optimizer(self):
         from megatron.core.models.mimo.optimizer import MimoOptimizer, ModuleOptimizerInfo
+        from megatron.core.process_groups_config import ProcessGroupCollection
 
         opt_a = MagicMock()
         opt_b = MagicMock()
 
+        def make_pg_collection():
+            pg_collection = ProcessGroupCollection()
+            group = Mock()
+            group.rank.return_value = 0
+            group.size.return_value = 1
+            pg_collection.tp = group
+            pg_collection.pp = group
+            pg_collection.dp = group
+            pg_collection.dp_cp = group
+            if hasattr(pg_collection, "gtp_remat"):
+                pg_collection.gtp_remat = None
+            return pg_collection
+
         module_infos = {
-            "language": ModuleOptimizerInfo(optimizer=opt_a, grid=Mock(), pg_collection=Mock(), is_active=True),
-            "vision": ModuleOptimizerInfo(optimizer=opt_b, grid=Mock(), pg_collection=Mock(), is_active=True),
+            "language": ModuleOptimizerInfo(
+                optimizer=opt_a, grid=Mock(), pg_collection=make_pg_collection(), is_active=True
+            ),
+            "vision": ModuleOptimizerInfo(
+                optimizer=opt_b, grid=Mock(), pg_collection=make_pg_collection(), is_active=True
+            ),
         }
         config = MagicMock()
         return MimoOptimizer(module_infos, config), opt_a, opt_b

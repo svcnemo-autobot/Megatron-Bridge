@@ -15,7 +15,7 @@
 import json
 import os
 import warnings
-from dataclasses import fields
+from dataclasses import fields, replace
 from typing import Any, Optional, Union
 from unittest.mock import MagicMock, patch
 
@@ -158,6 +158,35 @@ def create_test_optimizer_config(**kwargs: Any) -> OptimizerConfig:
     }
     defaults.update(kwargs)
     return OptimizerConfig(**defaults)
+
+
+class TestOptimizerConfigDeferredPostInit:
+    """Verify safe derived optimizer state exists before deferred validation."""
+
+    def test_precision_aware_mode_is_initialized(self):
+        config = create_test_optimizer_config(
+            use_precision_aware_optimizer=True, main_params_dtype=torch.bfloat16
+        )
+
+        assert config.use_precision_aware_optimizer_no_fp8_or_ds_fp8 is True
+
+    def test_dataclass_replace_recomputes_precision_aware_mode(self):
+        config = create_test_optimizer_config(use_precision_aware_optimizer=False)
+
+        replaced = replace(
+            config, use_precision_aware_optimizer=True, main_params_dtype=torch.bfloat16
+        )
+
+        assert replaced.use_precision_aware_optimizer_no_fp8_or_ds_fp8 is True
+
+    def test_finalize_keeps_precision_aware_mode_valid(self):
+        config = create_test_optimizer_config(
+            use_precision_aware_optimizer=True, main_params_dtype=torch.bfloat16
+        )
+
+        config.finalize()
+
+        assert config.use_precision_aware_optimizer_no_fp8_or_ds_fp8 is True
 
 
 def create_test_scheduler_config(**kwargs: Any) -> SchedulerConfig:

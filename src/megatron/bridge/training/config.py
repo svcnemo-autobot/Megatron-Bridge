@@ -131,7 +131,18 @@ class OptimizerConfig(MCoreOptimizerConfig):
 
         The original post_init logic is deferred until finalize() is called.
         """
-        pass
+        self._set_precision_aware_optimizer_mode()
+
+    def _set_precision_aware_optimizer_mode(self) -> None:
+        """Set the derived precision-aware optimizer mode without running validation."""
+        self.use_precision_aware_optimizer_no_fp8_or_ds_fp8 = (
+            self.use_precision_aware_optimizer
+            and (
+                self.main_params_dtype != torch.float32
+                or (self.fp8_recipe is None or self.fp8_recipe == "delayed")
+                or self.optimizer_cpu_offload
+            )
+        )
 
     def finalize(self) -> None:
         """Execute the deferred MCore post-init logic.

@@ -16,9 +16,9 @@
 
 from __future__ import annotations
 
-from megatron.core.inference.text_generation_server.dynamic_text_gen_server.incremental_detokenizer import (
-    HuggingFaceFastIncrementalDetokenizer,
-)
+from importlib import import_module
+
+import pytest
 from tokenizers import Tokenizer, models
 from transformers import PreTrainedTokenizerFast
 
@@ -128,11 +128,19 @@ def test_openai_server_preserves_hf_chat_template_contract():
 
 
 def test_openai_streaming_accepts_hf_fast_tokenizer_adapter():
+    try:
+        detokenizer_module = import_module(
+            "megatron.core.inference.text_generation_server.dynamic_text_gen_server.incremental_detokenizer"
+        )
+    except ModuleNotFoundError:
+        pytest.skip("MCore dev does not include the optional incremental detokenizer")
+    detokenizer_cls = detokenizer_module.HuggingFaceFastIncrementalDetokenizer
+
     backend = Tokenizer(models.WordLevel(vocab={"[UNK]": 0, "hello": 1}, unk_token="[UNK]"))
     tokenizer = PreTrainedTokenizerFast(tokenizer_object=backend, unk_token="[UNK]", eos_token="[UNK]")
     adapter = HFTokenizerAdapter(tokenizer)
 
-    detokenizer = HuggingFaceFastIncrementalDetokenizer(adapter, [])
+    detokenizer = detokenizer_cls(adapter, [])
 
     assert detokenizer.text == ""
     assert detokenizer.update([tokenizer.eos_token_id]) == ""
