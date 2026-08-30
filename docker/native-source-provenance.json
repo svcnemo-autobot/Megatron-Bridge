@@ -1,5 +1,5 @@
 {
-  "schema": "megatron-bridge.native-source-provenance.v2",
+  "schema": "megatron-bridge.native-source-provenance.v3",
   "authority": {
     "repository": "NVIDIA/Megatron-LM",
     "manifest_path": "pyproject.toml",
@@ -10,7 +10,18 @@
   "lanes": [
     {
       "name": "main",
-      "audit": {"selected_by": "frozen-mcore-gitlink", "transformer_engine_evidence": "mcore-manifest-and-build-cache-verifier", "fast_hadamard_transform_evidence": "mcore-manifest-bridge-override-and-build-cache-verifier"},
+      "mcore_source_inventory": {
+        "deep-gemm": {"entry_shape": "table", "repository": "https://github.com/deepseek-ai/DeepGEMM.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["714dd1a4a980f7937a74", "343d19a8eba4fe321480"]}},
+        "emerging-optimizers": {"entry_shape": "table", "repository": "https://github.com/NVIDIA-NeMo/Emerging-Optimizers.git", "revision_value": "v0.3.0"},
+        "fast-hadamard-transform": {"entry_shape": "table", "repository": "https://github.com/Dao-AILab/fast-hadamard-transform.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["f134af63deb2df17e117", "1a9ec1ea4a7d8604d5ca"]}},
+        "flash-mla": {"entry_shape": "list", "repository": "https://github.com/deepseek-ai/FlashMLA", "revision_value": "nv_dev"},
+        "mamba-ssm": {"entry_shape": "table", "repository": "https://github.com/state-spaces/mamba.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["0048fbf2e7b2f214dcbe", "703ea3dec2b9647595e1"]}},
+        "nemo-lens": {"entry_shape": "table", "repository": "https://github.com/NVIDIA-NeMo/Lens.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["b85578fc2b736a180470", "5e537001b5f45e9c715d"]}},
+        "nemo-run": {"entry_shape": "table", "repository": "https://github.com/NVIDIA-NeMo/Run.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["e3935393a290aed1822a", "f52139b4b8ee270fed1f"]}},
+        "torch-memory-saver": {"entry_shape": "table", "repository": "https://github.com/fzyzcjy/torch_memory_saver.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["9bc9a442e6d108c7b790", "3def199896a005143aaf"]}},
+        "transformer-engine": {"entry_shape": "table", "repository": "https://github.com/NVIDIA/TransformerEngine.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["4329ff84bfbdaa778a33", "cba02a15fb0807c64689"]}}
+      },
+      "audit": {"selected_by": "frozen-mcore-gitlink", "transformer_engine_evidence": "mcore-manifest-and-build-cache-verifier", "fast_hadamard_transform_evidence": "mcore-manifest-bridge-override-and-build-cache-verifier", "torch_memory_saver_evidence": "mcore-manifest-reviewed-build-tree-and-local-cache-verifier"},
       "mcore_commit": {"object_format": "40-hex-git-oid", "parts": ["4ac689b8bfe55c00f61d", "7ff0d082cad558632445"]},
       "native_sources": {
         "transformer_engine": {
@@ -18,7 +29,8 @@
           "repository": "https://github.com/NVIDIA/TransformerEngine.git",
           "mcore_commit": {"object_format": "40-hex-git-oid", "parts": ["4329ff84bfbdaa778a33", "cba02a15fb0807c64689"]},
           "build_commit": {"object_format": "40-hex-git-oid", "parts": ["4329ff84bfbdaa778a33", "cba02a15fb0807c64689"]},
-          "bridge_selector": null
+          "bridge_selector": null,
+          "transition": {"prior_bridge_commit": {"object_format": "40-hex-git-oid", "parts": ["27486e03cfc1fa41f693", "2dcecdc47c71c47eac3e"]}, "selected_mcore_commit": {"object_format": "40-hex-git-oid", "parts": ["4329ff84bfbdaa778a33", "cba02a15fb0807c64689"]}, "authority": "frozen-mcore-manifest", "disposition": "bridge-selector-removed"}
         },
         "fast_hadamard_transform": {
           "package": "fast-hadamard-transform",
@@ -32,12 +44,21 @@
           "repository": "https://github.com/fzyzcjy/torch_memory_saver.git",
           "mcore_commit": {"object_format": "40-hex-git-oid", "parts": ["9bc9a442e6d108c7b790", "3def199896a005143aaf"]},
           "build_commit": {"object_format": "40-hex-git-oid", "parts": ["9bc9a442e6d108c7b790", "3def199896a005143aaf"]},
-          "bridge_selector": null
+          "bridge_selector": null,
+          "audit": {"setup_py": {"object_format": "40-hex-git-oid", "parts": ["35811baa67ab0cf7e9cf", "46638d967aedfaba44a0"]}, "manifest_in": {"object_format": "40-hex-git-oid", "parts": ["7383c226c3ef869cd7ce", "7c46a9970772faee0d16"]}, "gitlinks": "absent", "nested_fetches": "absent"}
         }
       }
     },
     {
       "name": "dev",
+      "mcore_source_inventory": {
+        "emerging-optimizers": {"entry_shape": "table", "repository": "https://github.com/NVIDIA-NeMo/Emerging-Optimizers.git", "revision_value": "v0.3.0"},
+        "fast-hadamard-transform": {"entry_shape": "table", "repository": "https://github.com/Dao-AILab/fast-hadamard-transform.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["f134af63deb2df17e117", "1a9ec1ea4a7d8604d5ca"]}},
+        "flash-mla": {"entry_shape": "list", "repository": "https://github.com/deepseek-ai/FlashMLA", "revision_value": "nv_dev"},
+        "nemo-run": {"entry_shape": "table", "repository": "https://github.com/NVIDIA-NeMo/Run.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["17ae86b64d7f75653351", "664f5d8c9e466faede00"]}},
+        "nvidia-cudnn-frontend": {"entry_shape": "table", "repository": "https://github.com/NVIDIA/cudnn-frontend.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["0a14b7181d129d30e7ba", "d34b8c3ed0a0c995e23d"]}},
+        "transformer-engine": {"entry_shape": "table", "repository": "https://github.com/NVIDIA/TransformerEngine.git", "revision": {"object_format": "40-hex-git-oid", "parts": ["f031cf87bd054c7558b8", "87df7bed93975456667f"]}}
+      },
       "audit": {"selected_by": "frozen-mcore-gitlink", "transformer_engine_evidence": "mcore-manifest-and-build-cache-verifier", "fast_hadamard_transform_evidence": "mcore-manifest-bridge-override-and-build-cache-verifier"},
       "mcore_commit": {"object_format": "40-hex-git-oid", "parts": ["bae1d8992fe40719505d", "2e10537e3cc1816ee68f"]},
       "native_sources": {
@@ -62,6 +83,6 @@
   "verification": {
     "consumer": "docker/Dockerfile.ci",
     "script": "docker/verify-native-source-provenance.py",
-    "contract": "The build reconstructs each Git object ID, verifies active native sources against the frozen MCore manifest and Bridge selectors, and checks the exact source commits used by its local build caches. Object IDs are split only to prevent DevSkim from misclassifying public Git commits as secrets."
+    "contract": "The build verifies the complete frozen MCore Git-source inventory, enforces Bridge selectors or explicit absence for every audited native dependency, and checks exact source commits and reviewed build entrypoints in local caches before installation. Object IDs are split only to prevent DevSkim from misclassifying public Git commits as secrets."
   }
 }

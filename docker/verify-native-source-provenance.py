@@ -22,6 +22,7 @@ from typing import Any
 
 import tomllib
 from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import canonicalize_name
 
 
 _GIT_OID_PART = re.compile(r"[0-9a-f]{20}")
@@ -75,17 +76,22 @@ def _build_commit(lane: dict[str, Any], name: str) -> str:
 
 
 def _uv_sources(path: Path) -> dict[str, Any]:
-    """Parse effective uv source declarations from a project manifest."""
+    """Parse and canonicalize effective uv source declarations."""
     with path.open("rb") as manifest_file:
         manifest = tomllib.load(manifest_file)
-    sources = manifest.get("tool", {}).get("uv", {}).get("sources", {})
-    _require(isinstance(sources, dict), "invalid tool.uv.sources table")
+    raw_sources = manifest.get("tool", {}).get("uv", {}).get("sources", {})
+    _require(isinstance(raw_sources, dict), "invalid tool.uv.sources table")
+    sources: dict[str, Any] = {}
+    for package, declaration in raw_sources.items():
+        canonical_package = canonicalize_name(package)
+        _require(canonical_package not in sources, f"duplicate canonical source for {canonical_package}")
+        sources[canonical_package] = declaration
     return sources
 
 
 def _source_entries(sources: dict[str, Any], package: str) -> list[dict[str, Any]]:
     """Return normalized source entries for one package."""
-    entries = sources.get(package, [])
+    entries = sources.get(canonicalize_name(package), [])
     if isinstance(entries, dict):
         entries = [entries]
     _require(
@@ -93,6 +99,41 @@ def _source_entries(sources: dict[str, Any], package: str) -> list[dict[str, Any
         f"invalid {package} source declaration",
     )
     return entries
+
+
+def _inventory_revision(record: dict[str, Any], label: str) -> str:
+    """Read a literal tag/branch or reconstruct an immutable revision."""
+    if "revision_value" in record:
+        revision = record["revision_value"]
+        _require(isinstance(revision, str) and revision, f"invalid revision for {label}")
+        return revision
+    return _git_commit(record["revision"], label)
+
+
+def _verify_inventory(sources: dict[str, Any], inventory: dict[str, Any], label: str) -> None:
+    """Require the complete Git source table to match the reviewed inventory."""
+    _require(isinstance(inventory, dict), f"invalid {label} Git source inventory")
+    expected: dict[str, Any] = {}
+    for package, record in inventory.items():
+        canonical_package = canonicalize_name(package)
+        _require(canonical_package == package, f"non-canonical {label} inventory package: {package}")
+        _require(canonical_package not in expected, f"duplicate {label} inventory package: {package}")
+        expected[canonical_package] = record
+    _require(set(sources) == set(expected), f"{label} source inventory does not match provenance")
+    for package, record in expected.items():
+        _require(isinstance(record, dict), f"invalid {label} inventory entry for {package}")
+        raw_declaration = sources[package]
+        shape = "list" if isinstance(raw_declaration, list) else "table"
+        _require(shape == record.get("entry_shape"), f"{label} source shape changed for {package}")
+        entries = _source_entries(sources, package)
+        _require(len(entries) == 1, f"{label} must have exactly one source for {package}")
+        entry = entries[0]
+        _require(set(entry) == {"git", "rev"}, f"{label} source must be unconditional for {package}")
+        _require(
+            entry["git"] == record.get("repository")
+            and entry["rev"] == _inventory_revision(record, f"{label} {package}"),
+            f"{label} source does not match provenance for {package}",
+        )
 
 
 def _verify_exact_source(sources: dict[str, Any], package: str, repository: str, revision: str, label: str) -> None:
@@ -108,8 +149,9 @@ def _verify_exact_source(sources: dict[str, Any], package: str, repository: str,
 
 
 def _verify_mcore_manifest(lane: dict[str, Any], path: Path) -> None:
-    """Verify every active native source against parsed frozen MCore metadata."""
+    """Verify the complete Git inventory and active native sources in frozen MCore metadata."""
     sources = _uv_sources(path)
+    _verify_inventory(sources, lane["mcore_source_inventory"], "MCore")
     for name, source in lane["native_sources"].items():
         package = name.replace("_", "-")
         entries = _source_entries(sources, package)
@@ -125,26 +167,55 @@ def _verify_mcore_manifest(lane: dict[str, Any], path: Path) -> None:
         )
 
 
+def _requirement(value: str, label: str) -> Requirement:
+    """Parse one PEP 508 requirement with a stable validation error."""
+    try:
+        return Requirement(value)
+    except InvalidRequirement as error:
+        raise ValueError(f"invalid {label} dependency") from error
+
+
+def _all_requirements(manifest: dict[str, Any]) -> list[Requirement]:
+    """Collect requirements that can select direct VCS sources during a Bridge sync."""
+    requirement_values: list[str] = []
+    project = manifest.get("project", {})
+    requirement_values.extend(project.get("dependencies", []))
+    for values in project.get("optional-dependencies", {}).values():
+        requirement_values.extend(values)
+    for values in manifest.get("dependency-groups", {}).values():
+        requirement_values.extend(value for value in values if isinstance(value, str))
+    requirement_values.extend(manifest.get("build-system", {}).get("requires", []))
+    requirement_values.extend(manifest.get("tool", {}).get("uv", {}).get("override-dependencies", []))
+    _require(all(isinstance(value, str) for value in requirement_values), "invalid Bridge dependency list")
+    return [_requirement(value, "Bridge") for value in requirement_values]
+
+
 def _verify_bridge_manifest(lane: dict[str, Any], path: Path) -> None:
-    """Verify each explicit Bridge-side selector against parsed project metadata."""
+    """Verify Bridge selectors and enforce explicit absence of MCore-owned sources."""
     with path.open("rb") as manifest_file:
         manifest = tomllib.load(manifest_file)
-    sources = manifest.get("tool", {}).get("uv", {}).get("sources", {})
+    sources = _uv_sources(path)
     overrides = manifest.get("tool", {}).get("uv", {}).get("override-dependencies", [])
-    _require(isinstance(sources, dict), "invalid Bridge tool.uv.sources table")
     _require(isinstance(overrides, list), "invalid Bridge override dependencies")
-    requirements: list[Requirement] = []
-    for override in overrides:
-        try:
-            requirements.append(Requirement(override))
-        except InvalidRequirement as error:
-            raise ValueError("invalid Bridge override dependency") from error
+    override_requirements = [_requirement(override, "Bridge override") for override in overrides]
+    all_requirements = _all_requirements(manifest)
     for name, source in lane["native_sources"].items():
-        if source is None or source["bridge_selector"] is None:
+        package = source["package"] if source is not None else name.replace("_", "-")
+        matching_urls = [
+            requirement
+            for requirement in all_requirements
+            if canonicalize_name(requirement.name) == canonicalize_name(package) and requirement.url is not None
+        ]
+        if source is None:
+            _require(not _source_entries(sources, package), f"unexpected {package} Bridge source")
+            _require(not matching_urls, f"unexpected direct {package} Bridge requirement")
             continue
         selector = source["bridge_selector"]
-        package = source["package"]
         repository = source["repository"]
+        if selector is None:
+            _require(not _source_entries(sources, package), f"unexpected {package} Bridge source")
+            _require(not matching_urls, f"unexpected direct {package} Bridge requirement")
+            continue
         if selector["kind"] == "uv-source":
             revision = _git_commit(selector["commit"], f"{name} Bridge selector")
             _verify_exact_source(sources, package, repository, revision, f"{package} Bridge")
@@ -152,7 +223,11 @@ def _verify_bridge_manifest(lane: dict[str, Any], path: Path) -> None:
             revision = selector.get("value")
             if revision is None:
                 revision = _git_commit(selector["commit"], f"{name} Bridge selector")
-            matching = [requirement for requirement in requirements if requirement.name == package]
+            matching = [
+                requirement
+                for requirement in override_requirements
+                if canonicalize_name(requirement.name) == canonicalize_name(package)
+            ]
             _require(len(matching) == 1, f"{package} must have exactly one Bridge override")
             requirement = matching[0]
             _require(requirement.marker is None, f"{package} Bridge override must be unconditional")
@@ -164,6 +239,33 @@ def _verify_bridge_manifest(lane: dict[str, Any], path: Path) -> None:
             raise ValueError(f"invalid {name} Bridge selector kind")
 
 
+def _verify_lane_audit(manifest: dict[str, Any], lane: dict[str, Any]) -> None:
+    """Bind the reviewed source transitions and native build entrypoints."""
+    if lane["name"] != "main":
+        return
+    transformer_engine = _source(lane, "transformer_engine")
+    transition = transformer_engine.get("transition", {})
+    baseline = manifest["authority"]["baseline_bridge_transformer_engine"]
+    _require(
+        _git_commit(transition["prior_bridge_commit"], "prior Bridge TransformerEngine")
+        == _git_commit(baseline["commit"], "baseline Bridge TransformerEngine"),
+        "TransformerEngine transition baseline does not match provenance",
+    )
+    _require(
+        _git_commit(transition["selected_mcore_commit"], "selected MCore TransformerEngine")
+        == _git_commit(transformer_engine["mcore_commit"], "main TransformerEngine MCore"),
+        "TransformerEngine transition target does not match MCore",
+    )
+    _require(transition.get("authority") == "frozen-mcore-manifest", "invalid TransformerEngine transition authority")
+    _require(transition.get("disposition") == "bridge-selector-removed", "invalid TransformerEngine transition")
+    torch_memory_saver = _source(lane, "torch_memory_saver")
+    audit = torch_memory_saver.get("audit", {})
+    _git_commit(audit["setup_py"], "torch-memory-saver setup.py")
+    _git_commit(audit["manifest_in"], "torch-memory-saver MANIFEST.in")
+    _require(audit.get("gitlinks") == "absent", "invalid torch-memory-saver gitlink policy")
+    _require(audit.get("nested_fetches") == "absent", "invalid torch-memory-saver nested-fetch policy")
+
+
 def main() -> None:
     """Validate lane provenance and the supplied source manifests."""
     parser = argparse.ArgumentParser()
@@ -171,11 +273,15 @@ def main() -> None:
     parser.add_argument("--mcore-ref", required=True)
     parser.add_argument("--transformer-engine-ref")
     parser.add_argument("--fast-hadamard-transform-ref")
+    parser.add_argument("--torch-memory-saver-ref")
+    parser.add_argument("--torch-memory-saver-setup-ref")
+    parser.add_argument("--torch-memory-saver-manifest-ref")
     parser.add_argument("--mcore-pyproject", type=Path)
     parser.add_argument("--bridge-pyproject", type=Path)
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text())
     lane = _lane(manifest, args.mcore_ref)
+    _verify_lane_audit(manifest, lane)
     if args.transformer_engine_ref is not None:
         _require(
             _build_commit(lane, "transformer_engine") == args.transformer_engine_ref,
@@ -185,6 +291,26 @@ def main() -> None:
         _require(
             _build_commit(lane, "fast_hadamard_transform") == args.fast_hadamard_transform_ref,
             "fast-hadamard-transform build source does not match provenance",
+        )
+    tms_audit_args = (args.torch_memory_saver_setup_ref, args.torch_memory_saver_manifest_ref)
+    if args.torch_memory_saver_ref is not None or any(value is not None for value in tms_audit_args):
+        _require(
+            args.torch_memory_saver_ref is not None and all(tms_audit_args), "incomplete torch-memory-saver audit"
+        )
+        torch_memory_saver = _source(manifest["lanes"][0], "torch_memory_saver")
+        _require(
+            _git_commit(torch_memory_saver["build_commit"], "torch-memory-saver build") == args.torch_memory_saver_ref,
+            "torch-memory-saver build source does not match provenance",
+        )
+        _require(
+            _git_commit(torch_memory_saver["audit"]["setup_py"], "torch-memory-saver setup.py")
+            == args.torch_memory_saver_setup_ref,
+            "torch-memory-saver setup.py does not match provenance",
+        )
+        _require(
+            _git_commit(torch_memory_saver["audit"]["manifest_in"], "torch-memory-saver MANIFEST.in")
+            == args.torch_memory_saver_manifest_ref,
+            "torch-memory-saver MANIFEST.in does not match provenance",
         )
     if args.mcore_pyproject is not None:
         _verify_mcore_manifest(lane, args.mcore_pyproject)
