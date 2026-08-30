@@ -134,6 +134,9 @@ ARG FAST_HADAMARD_TRANSFORM_MAIN_REF=1cc807efbd6cc001df359822d60bf6052dd66859
 ARG FAST_HADAMARD_TRANSFORM_DEV_REF=f134af63deb2df17e1171a9ec1ea4a7d8604d5ca
 ARG TRANSFORMER_ENGINE_MAIN_REF=4329ff84bfbdaa778a33cba02a15fb0807c64689
 ARG TRANSFORMER_ENGINE_DEV_REF=f031cf87bd054c7558b887df7bed93975456667f
+ARG TORCH_MEMORY_SAVER_MAIN_REF=9bc9a442e6d108c7b7903def199896a005143aaf
+ARG TORCH_MEMORY_SAVER_SETUP_REF=35811baa67ab0cf7e9cf46638d967aedfaba44a0
+ARG TORCH_MEMORY_SAVER_MANIFEST_REF=7383c226c3ef869cd7ce7c46a9970772faee0d16
 ARG EMERGING_OPTIMIZERS_REF=b309e2f01cda75dc96a6dc1a2355a7b3b64b5e16
 ARG EMERGING_OPTIMIZERS_PYPROJECT=a1f7327489c439a3e696474458a12630b6ebd762
 ARG BASELINE_MCORE_REF
@@ -145,7 +148,10 @@ RUN python /opt/verify-native-source-provenance.py \
         --transformer-engine-ref \
         "$(if [ "$BASELINE_MCORE_REF" = "4ac689b8bfe55c00f61d7ff0d082cad558632445" ]; then printf %s "$TRANSFORMER_ENGINE_MAIN_REF"; else printf %s "$TRANSFORMER_ENGINE_DEV_REF"; fi)" \
         --fast-hadamard-transform-ref \
-        "$(if [ "$BASELINE_MCORE_REF" = "4ac689b8bfe55c00f61d7ff0d082cad558632445" ]; then printf %s "$FAST_HADAMARD_TRANSFORM_MAIN_REF"; else printf %s "$FAST_HADAMARD_TRANSFORM_DEV_REF"; fi)"
+        "$(if [ "$BASELINE_MCORE_REF" = "4ac689b8bfe55c00f61d7ff0d082cad558632445" ]; then printf %s "$FAST_HADAMARD_TRANSFORM_MAIN_REF"; else printf %s "$FAST_HADAMARD_TRANSFORM_DEV_REF"; fi)" \
+        --torch-memory-saver-ref "$TORCH_MEMORY_SAVER_MAIN_REF" \
+        --torch-memory-saver-setup-ref "$TORCH_MEMORY_SAVER_SETUP_REF" \
+        --torch-memory-saver-manifest-ref "$TORCH_MEMORY_SAVER_MANIFEST_REF"
 RUN git clone --no-checkout https://github.com/NVIDIA-NeMo/Emerging-Optimizers.git /opt/emerging-optimizers && \
     git -C /opt/emerging-optimizers fetch --depth 1 origin \
         refs/tags/v0.3.0:refs/tags/v0.3.0 && \
@@ -220,7 +226,17 @@ RUN git clone --no-checkout https://github.com/Dao-AILab/fast-hadamard-transform
     git config --global url.file:///opt/transformer-engine-googletest/.insteadOf \
         https://github.com/google/googletest.git && \
     git config --global url.file:///opt/transformer-engine-nccl/.insteadOf \
-        https://github.com/NVIDIA/nccl.git
+        https://github.com/NVIDIA/nccl.git && \
+    git clone --no-checkout https://github.com/fzyzcjy/torch_memory_saver.git /opt/torch-memory-saver && \
+    git -C /opt/torch-memory-saver fetch --depth 1 origin "$TORCH_MEMORY_SAVER_MAIN_REF" && \
+    test "$(git -C /opt/torch-memory-saver rev-parse FETCH_HEAD^{commit})" = "$TORCH_MEMORY_SAVER_MAIN_REF" && \
+    test -z "$(git -C /opt/torch-memory-saver ls-tree "$TORCH_MEMORY_SAVER_MAIN_REF" .gitmodules)" && \
+    test "$(git -C /opt/torch-memory-saver rev-parse "$TORCH_MEMORY_SAVER_MAIN_REF:setup.py")" = \
+        "$TORCH_MEMORY_SAVER_SETUP_REF" && \
+    test "$(git -C /opt/torch-memory-saver rev-parse "$TORCH_MEMORY_SAVER_MAIN_REF:MANIFEST.in")" = \
+        "$TORCH_MEMORY_SAVER_MANIFEST_REF" && \
+    git config --global url.file:///opt/torch-memory-saver/.insteadOf \
+        https://github.com/fzyzcjy/torch_memory_saver.git
 
 # Resolve the immutable baseline before copying the mutable dispatched checkout.
 # This keeps the dependency layer independent of ordinary MCore source changes.
