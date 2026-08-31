@@ -747,6 +747,16 @@ assert flop_utils._is_gated_delta_net_variant("gdn") is True
 
         assert flop_utils._is_gated_delta_net_variant(variant) is expected
 
+    def test_gdn2_is_recognized_with_mcore_without_gdn2(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Bridge must preserve GDN2 support while testing against newer MCore variants."""
+        monkeypatch.setattr(
+            flop_utils, "_mcore_is_gated_delta_net_variant", lambda variant: variant == "gdn"
+        )
+
+        assert flop_utils._is_gated_delta_net_variant("gdn2") is True
+
     def test_gdn_flops_differ_from_pure_attention(self):
         """GDN-enabled config should produce different FLOPs than pure-attention baseline."""
         batch_size = 1
