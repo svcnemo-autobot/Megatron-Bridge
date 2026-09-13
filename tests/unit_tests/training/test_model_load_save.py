@@ -189,7 +189,8 @@ class TestTemporaryDistributedContext:
     @patch("megatron.bridge.training.model_load_save.tempfile.TemporaryDirectory")
     def test_temporary_distributed_context_gloo(self, mock_tmpdir, mock_parallel_state, mock_dist):
         """Test temporary distributed context with gloo backend."""
-        mock_tmpdir.return_value.name = str(Path("bridge-rendezvous"))
+        rendezvous_dir = Path(tempfile.gettempdir()) / "bridge-rendezvous"
+        mock_tmpdir.return_value.name = str(rendezvous_dir)
 
         with (
             patch("megatron.bridge.training.model_load_save.torch.cuda.is_available", return_value=False),
@@ -199,7 +200,7 @@ class TestTemporaryDistributedContext:
             pass
 
         mock_dist.init_process_group.assert_called_once_with(
-            backend="gloo", init_method="file:///tmp/bridge-rendezvous/rendezvous", world_size=1, rank=0
+            backend="gloo", init_method=(rendezvous_dir / "rendezvous").as_uri(), world_size=1, rank=0
         )
         mock_parallel_state.initialize_model_parallel.assert_called_once()
         mock_parallel_state.destroy_model_parallel.assert_called_once()
@@ -212,13 +213,14 @@ class TestTemporaryDistributedContext:
     @patch("megatron.bridge.training.model_load_save.tempfile.TemporaryDirectory")
     def test_temporary_distributed_context_uses_isolated_rendezvous(self, mock_tmpdir, mock_parallel_state, mock_dist):
         """Test that the standalone context does not reuse an ambient torchrun store."""
-        mock_tmpdir.return_value.name = str(Path("bridge-rendezvous"))
+        rendezvous_dir = Path(tempfile.gettempdir()) / "bridge-rendezvous"
+        mock_tmpdir.return_value.name = str(rendezvous_dir)
 
         with temporary_distributed_context(backend="gloo"):
             pass
 
         mock_dist.init_process_group.assert_called_once_with(
-            backend="gloo", init_method="file:///tmp/bridge-rendezvous/rendezvous", world_size=1, rank=0
+            backend="gloo", init_method=(rendezvous_dir / "rendezvous").as_uri(), world_size=1, rank=0
         )
         mock_tmpdir.return_value.cleanup.assert_called_once()
 
@@ -228,7 +230,8 @@ class TestTemporaryDistributedContext:
     @patch("megatron.core.tensor_parallel.model_parallel_cuda_manual_seed")
     def test_temporary_distributed_context_nccl(self, mock_seed, mock_tmpdir, mock_parallel_state, mock_dist):
         """Test temporary distributed context with nccl backend."""
-        mock_tmpdir.return_value.name = str(Path("bridge-rendezvous"))
+        rendezvous_dir = Path(tempfile.gettempdir()) / "bridge-rendezvous"
+        mock_tmpdir.return_value.name = str(rendezvous_dir)
 
         with (
             patch("megatron.bridge.training.model_load_save.torch.cuda.is_available", return_value=True),
@@ -238,7 +241,7 @@ class TestTemporaryDistributedContext:
             pass
 
         mock_dist.init_process_group.assert_called_once_with(
-            backend="nccl", init_method="file:///tmp/bridge-rendezvous/rendezvous", world_size=1, rank=0
+            backend="nccl", init_method=(rendezvous_dir / "rendezvous").as_uri(), world_size=1, rank=0
         )
         mock_seed.assert_called_once_with(0)
         mock_parallel_state.initialize_model_parallel.assert_called_once()
