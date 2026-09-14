@@ -1,0 +1,7 @@
+FROM 766267172432.dkr.ecr.us-east-1.amazonaws.com/megatron-bridge:1e1b58f79292972a57eca9d77eeb814ff1d7060c
+ENV UV_CACHE_DIR=/tmp/uv-cache HOME=/tmp
+WORKDIR /opt/Megatron-Bridge
+RUN rm -f uv.lock \
+ && uv lock \
+ && echo "UVLOCK-SHA256-BEGIN" && sha256sum uv.lock && echo "UVLOCK-SHA256-END" \
+ && echo "UVLOCK-BASE64-BEGIN" && base64 uv.lock && echo "UVLOCK-BASE64-END"
