@@ -192,6 +192,36 @@ name = "torch-memory-saver"
 version = "0.0.10b1"
 requires-dist = []
 
+
+# flashinfer's index links its wheels to github.com release assets; mirror the wheels'
+# metadata so lock-time resolution never downloads them (same pattern as flash-mla above).
+[[tool.uv.dependency-metadata]]
+name = "flashinfer-cubin"
+version = "0.6.18.post1"
+requires-dist = []
+
+[[tool.uv.dependency-metadata]]
+name = "flashinfer-python"
+version = "0.6.18.post1"
+requires-dist = [
+    "apache-tvm-ffi",
+    "click",
+    "cuda-python",
+    "cuda-tile",
+    "einops",
+    "nccl4py",
+    "ninja",
+    "numpy",
+    "nvidia-cudnn-frontend",
+    "nvidia-cutlass-dsl[cu13]",
+    "nvidia-ml-py",
+    "packaging",
+    "requests",
+    "tabulate",
+    "torch",
+    "tqdm",
+]
+
 [tool.uv.sources]
 megatron-core = { path = "3rdparty/Megatron-LM/", editable = true }
 nvidia-modelopt = { index = "nvidia" }
