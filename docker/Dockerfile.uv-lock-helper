@@ -1,0 +1,11 @@
+FROM 766267172432.dkr.ecr.us-east-1.amazonaws.com/megatron-bridge:99702e170b69d5e6bcb62ec57b601b21702e14cb
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+USER root
+WORKDIR /opt/locksrc
+COPY . .
+RUN rm -f uv.lock && uv lock && sha256sum uv.lock | tee /tmp/uv.lock.sha256
