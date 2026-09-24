@@ -32,25 +32,27 @@ matches = [package for package in packages if package["name"] == "mamba-ssm"]
 if len(matches) != 1:
     raise RuntimeError("Expected exactly one locked mamba-ssm package")
 package = matches[0]
-if package["version"] != "2.3.1" or package["source"] != {"registry": "https://pypi.org/simple"}:
+allowed_versions = {"2.3.1", "2.3.2.post1"}
+if package["version"] not in allowed_versions or package["source"] != {"registry": "https://pypi.org/simple"}:
     raise RuntimeError("Mamba source/version changed; update docker/patches/mamba.patch before building")
 sdist = package["sdist"]
 algorithm, digest = sdist["hash"].split(":", 1)
 if algorithm != "sha256" or len(digest) != 64:
     raise RuntimeError("Expected a SHA-256 digest for the Mamba sdist")
-sys.stdout.write(f"{sdist['url']} {digest}\n")
+sys.stdout.write(f"{package['version']} {sdist['url']} {digest}\n")
 PY
 )"
-read -r sdist_url sdist_sha256 <<< "$sdist_info"
+read -r mamba_version sdist_url sdist_sha256 <<< "$sdist_info"
 
 mamba_build_dir="$(mktemp -d)"
 trap 'rm -rf -- "${mamba_build_dir:?}"' EXIT
 curl --fail --location --retry 3 "$sdist_url" --output "$mamba_build_dir/mamba.tar.gz"
 echo "$sdist_sha256  $mamba_build_dir/mamba.tar.gz" | sha256sum -c -
 tar -xzf "$mamba_build_dir/mamba.tar.gz" -C "$mamba_build_dir"
-patch --batch --forward --fuzz=0 -d "$mamba_build_dir/mamba_ssm-2.3.1" -p1 < "$patch_file"
+mamba_source_dir="$mamba_build_dir/mamba_ssm-$mamba_version"
+patch --batch --forward --fuzz=0 -d "$mamba_source_dir" -p1 < "$patch_file"
 
 # --no-deps preserves the environment resolved by uv sync, especially base-image
 # torch. FORCE_BUILD prevents Mamba's setup.py from downloading an unpatched wheel.
 MAMBA_FORCE_BUILD=TRUE uv pip install --no-build-isolation --no-deps --reinstall \
-    "$mamba_build_dir/mamba_ssm-2.3.1"
+    "$mamba_source_dir"
