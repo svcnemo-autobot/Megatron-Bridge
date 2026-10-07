@@ -229,6 +229,7 @@ Megatron Bridge provides out-of-the-box bridges and training recipes for a wide 
 
 | Family | Supported variants |
 |----------------|--------------------|
+| [**BAGEL**](docs/models/bagel/bagel.md) | BAGEL-7B-MoT (requires the tested MCore `dev` revision and `bagel` extra) |
 | [**Bailing**](docs/models/bailing/index.md) | Ling 2.0 / Ling MoE V2 (Bailing) |
 | [**BAGEL**](docs/models/bagel/bagel.md) | BAGEL-7B-MoT |
 | [**BERT**](docs/models/bert/index.md) | Megatron-Style BERT (`MegatronBertForMaskedLM`) |
