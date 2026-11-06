@@ -1,0 +1,14 @@
+# Build-only validation image extension for the nightly MCore bump (AUT-2765).
+# Not part of any product PR. It adds one offline runtime dependency that the
+# L1_Launch_models_minicpmo.sh launcher installs with --no-deps, so the GPU test
+# pod (which has no package egress) can run the native launcher unchanged.
+# Base: this Session's immutable validation image (Bridge 46d7f7b8 merged with main, MCore f1b38a8d).
+FROM 766267172432.dkr.ecr.us-east-1.amazonaws.com/nemo-autobot/agent-sandbox@sha256:8ebf415e347a7d9be7756958f1ef48b58d59d46443ce73cae066a8ae76813e1c
+
+# Install as the image's existing runtime user, which owns /opt/venv.
+USER 1000:1000
+RUN uv pip install --python /opt/venv/bin/python3 --no-deps --no-cache "minicpmo-utils==1.0.7" && \
+    UV_OFFLINE=1 uv pip install --python /opt/venv/bin/python3 --no-deps "minicpmo-utils==1.0.7" && \
+    /opt/venv/bin/python3 -c "import importlib.metadata as m; v = m.version('minicpmo-utils'); assert v == '1.0.7', v; print('minicpmo-utils', v)" && \
+    (/opt/venv/bin/python3 -c "import minicpmo; print('import minicpmo ok', minicpmo.__file__)" || echo "import minicpmo probe failed at build time (no GPU); native rerun is authoritative")
+USER 1000:1000
