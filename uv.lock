@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = "==3.12.*"
 resolution-markers = [
     "sys_platform == 'darwin'",
@@ -795,10 +795,10 @@ wheels = [
 
 [[package]]
 name = "cuda-pathfinder"
-version = "1.8.6"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6a/9e/08555797c979322def080814686417ea93f66d38f5c48ebab6867a85a21e/cuda_pathfinder-1.8.6-py3-none-any.whl", hash = "sha256:bf6b3b06323cf95a11d671818392da5da23ddbbb4dfc4b77ca10622783c25980", size = 62603, upload-time = "2026-11-05T21:22:51.229Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/80/7cf8bbe4a8844198fa64481ffc6642003770999b9ead27e99fc03484989a/cuda_pathfinder-1.9.0-py3-none-any.whl", hash = "sha256:622df7440f7702f36b7a02a1699aa0b084fe04034d9939188fee9b16d0c36366", size = 63362, upload-time = "2026-11-13T17:02:04.522Z" },
 ]
 
 [[package]]
@@ -2879,7 +2879,7 @@ wheels = [
 
 [[package]]
 name = "nccl-extensions"
-version = "0.3.0.dev20261111"
+version = "0.3.0.dev20261112"
 source = { registry = "https://pypi.nvidia.com/" }
 dependencies = [
     { name = "cuda-core" },
@@ -2889,8 +2889,8 @@ dependencies = [
     { name = "packaging" },
 ]
 wheels = [
-    { url = "https://pypi.nvidia.com/nccl-extensions/nccl_extensions-0.3.0.dev20261111-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a0cf286fc27a9f2029d620bcdc8eb9578cdb991f798e55734d720ab5ec38c540" },
-    { url = "https://pypi.nvidia.com/nccl-extensions/nccl_extensions-0.3.0.dev20261111-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8acabac15637e902eb3489f36d566be134d3f78e5646587367ab37526924cb73" },
+    { url = "https://pypi.nvidia.com/nccl-extensions/nccl_extensions-0.3.0.dev20261112-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a40a5ba0b4a529364c4d6b8143726b3113d071b5674ab2596356b31ba2c8db43" },
+    { url = "https://pypi.nvidia.com/nccl-extensions/nccl_extensions-0.3.0.dev20261112-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4731bdb9d90f7a5f373dbdd2ad554f08fff96c4e966dbed5efb7fe28b7fadf03" },
 ]
 
 [[package]]
@@ -3664,17 +3664,17 @@ wheels = [
 
 [[package]]
 name = "protobuf"
-version = "7.37.0rc1"
+version = "7.37.0rc3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/49/13/6fab38f7340b150fee5a05e4a7e6330d7cef67a3ed9ebd8fabd76cdaf0f5/protobuf-7.37.0rc1.tar.gz", hash = "sha256:063e00a1c0a477f7f2ab0f7f2f3dfe306c146fb843a2d6503bec1d45c9771f9e", size = 542343, upload-time = "2026-10-15T19:06:21.281Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/88/2bfb1fab1b95da803b20c4435b7c10d42f8eaf84d4701a34c998ad809920/protobuf-7.37.0rc3.tar.gz", hash = "sha256:213fb9d0692cd967519fc5c125275382f7d7d9136a0a8c6706d9077159a966a8", size = 542510, upload-time = "2026-11-13T07:25:13.292Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/2a/e5a483104a2b851394878fc42d5fd65c8f793fdb50ca4497b0c6601d21d0/protobuf-7.37.0rc1-cp310-abi3-macosx_10_9_universal2.whl", hash = "sha256:ded89e0fd47494907f65d17c55f145e53f96910fee0dde74d6c9a6c1c5a0bfc7", size = 486492, upload-time = "2026-10-15T19:06:12.278Z" },
-    { url = "https://files.pythonhosted.org/packages/07/e6/3339b7b7aedd23cbfa3fd0b14c26dd782d445fa9f5df2eb57bafef9f1051/protobuf-7.37.0rc1-cp310-abi3-manylinux2014_aarch64.whl", hash = "sha256:988664eb7758ab503de13f702810bf5a10f173bc8a4c23c75d200536bc16211b", size = 359478, upload-time = "2026-10-15T19:06:14.065Z" },
-    { url = "https://files.pythonhosted.org/packages/2f/1f/9c4901d89250795f236fa89726c0d3aa4e24bda7c8da12cba04540b8533b/protobuf-7.37.0rc1-cp310-abi3-manylinux2014_s390x.whl", hash = "sha256:32e582ecb85c0531388dd177014da2fa4bf1aa6a7a1a217c68460d73b4bd8c02", size = 377611, upload-time = "2026-10-15T19:06:15.269Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/da/4daefb726c24b26dde21d8ff5150dfc3c50716b8621a57d73e5c96cf6475/protobuf-7.37.0rc1-cp310-abi3-manylinux2014_x86_64.whl", hash = "sha256:8a72dc39100b755c2153dbb30a829914b94181642f95bf54f461e8684a532493", size = 360670, upload-time = "2026-10-15T19:06:16.406Z" },
-    { url = "https://files.pythonhosted.org/packages/68/24/a006bab34932d92b26d56d58729baec1ba6428c8b5705b2fd1224487e028/protobuf-7.37.0rc1-cp310-abi3-win32.whl", hash = "sha256:f6ce26f09d9b74b3b860b13f950d649f133cd44f8decbcdd7752affe752c353b", size = 459879, upload-time = "2026-10-15T19:06:17.505Z" },
-    { url = "https://files.pythonhosted.org/packages/47/56/3fea290f7ab831156ce71d60c03a99fa9f8cc26d5600904eed75f3540d86/protobuf-7.37.0rc1-cp310-abi3-win_amd64.whl", hash = "sha256:afc657946f69cf9c8d9194356dd890803232c1e1c5f5514cfe8c8618187ac7a1", size = 473722, upload-time = "2026-10-15T19:06:18.82Z" },
-    { url = "https://files.pythonhosted.org/packages/de/0a/c3f826ea06144fb9a3ba288c7b5267e8ea4cfcfcc85d8b4fddf1a9870247/protobuf-7.37.0rc1-py3-none-any.whl", hash = "sha256:bd29a590f690e5e521aeeaa5f26d7aed05b69f61a35b2083bde58b4832025354", size = 181464, upload-time = "2026-10-15T19:06:20.052Z" },
+    { url = "https://files.pythonhosted.org/packages/15/38/0e2822d523a1bf4e139c1ea6d0a5cde999b1efae42dd2af8433cd70c1213/protobuf-7.37.0rc3-cp310-abi3-macosx_10_9_universal2.whl", hash = "sha256:e4f07716fb26c8225135454c2f7a969744b77a622ca21d25c7d956e0b931a8d2", size = 486593, upload-time = "2026-11-13T07:25:03.603Z" },
+    { url = "https://files.pythonhosted.org/packages/04/67/22f44e2834dc4677722c1b63bc7c57b14177154277cae396bc61abc24179/protobuf-7.37.0rc3-cp310-abi3-manylinux2014_aarch64.whl", hash = "sha256:f0736da2239abd73bc862483dddd99a612c8cca135b0628d112316c24e30dceb", size = 359579, upload-time = "2026-11-13T07:25:05.343Z" },
+    { url = "https://files.pythonhosted.org/packages/00/da/e1b437b1736e24dbc027ea2cb88c14af39fc52c14559a249bfa1f6cd8708/protobuf-7.37.0rc3-cp310-abi3-manylinux2014_s390x.whl", hash = "sha256:5def2d257c36ecaf69214de1980b87f78986e29615e2936c3d7c9279cb5536b3", size = 377712, upload-time = "2026-11-13T07:25:06.778Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/1c/88b1e97ff1af9e017da703d615da52aa376f87d4e5469e19b03e86202ead/protobuf-7.37.0rc3-cp310-abi3-manylinux2014_x86_64.whl", hash = "sha256:40d4457b40f73f62b0dd822b74408002d3bb358a780a948798ab82783ace7ef9", size = 360772, upload-time = "2026-11-13T07:25:08.198Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/0c/9562f67047deddd2ba7984b3ca17e26aeef4f707e0334723ae1ea6070b92/protobuf-7.37.0rc3-cp310-abi3-win32.whl", hash = "sha256:d70dc3346f327aa2b74e27471ffbe79fc5f9405eec4bea2df22afcab8b009348", size = 459980, upload-time = "2026-11-13T07:25:09.381Z" },
+    { url = "https://files.pythonhosted.org/packages/77/8f/5ca3bd253ec472520c6a1e419aabbe6f4a05e755a4acb88461c1234ca624/protobuf-7.37.0rc3-cp310-abi3-win_amd64.whl", hash = "sha256:27519367930f60882852dce5ee5543fa319a42b29dad759b9904ed711f006946", size = 473822, upload-time = "2026-11-13T07:25:10.74Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/b4/4091dd97a95886e7e2e27fe5ad91455e1586cf427e759e5cc07d30e61e3e/protobuf-7.37.0rc3-py3-none-any.whl", hash = "sha256:d2cf0886eda14c9f1d2e24493a35890d793543c54b4ba38f6817141bbcf6d8a8", size = 181565, upload-time = "2026-11-13T07:25:12.011Z" },
 ]
 
 [[package]]
@@ -3839,7 +3839,7 @@ pycountry = [
 
 [[package]]
 name = "pydantic-settings"
-version = "2.16.2"
+version = "2.16.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
@@ -3847,9 +3847,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d0/31/21d21e0e38a8f5f7a7f0cde22820117b6d17d6bc36f348129527f915d7f4/pydantic_settings-2.16.2.tar.gz", hash = "sha256:3dc08ffabed2bbd5dc2dd55ead7b78b4e4c5cd776aecd04310db5f1224caaf46", size = 309225, upload-time = "2026-10-28T11:14:28.066Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/28/227c843eedd29bd78e132e5aafa420d83154b10465c312f9c21ff2eaf77d/pydantic_settings-2.16.3.tar.gz", hash = "sha256:10e36f616623ebb586c05ca3d3cd22927146869db413d4f14c20c514442a1337", size = 311716, upload-time = "2026-11-13T11:18:30.102Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/88/4131c51ff87b7cd7f82a1194d0c0a2b7ca68c72d9da04c3b7e69ab91a79f/pydantic_settings-2.16.2-py3-none-any.whl", hash = "sha256:8d523e5c129b097686bde019bd6109bff53f4c8c3f63f1ddf9933ffa42e5ab4f", size = 81994, upload-time = "2026-10-28T11:14:26.716Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/26/3e68379ca313b6aa58e11fbd8b28d5c6f1b9f4428d70222ba021a76797ec/pydantic_settings-2.16.3-py3-none-any.whl", hash = "sha256:d1db16a2d34006323a1b42c0640898da58adfbad7ec30baaa9e2b18aafc08999", size = 82679, upload-time = "2026-11-13T11:18:28.73Z" },
 ]
 
 [[package]]
