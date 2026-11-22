@@ -1,0 +1,14 @@
+# Temporary validation-only extension for the 2026-11-22 nightly MCore bump (never part of a PR).
+# Base: the session-built Megatron-Bridge validation image for candidate cf1ba00f31c907f9ab75d0dc1f1eebb7fe6cf8cf.
+# Adds only the offline package that L1_Launch_models_minicpmo.sh installs at runtime.
+FROM 766267172432.dkr.ecr.us-east-1.amazonaws.com/nemo-autobot/agent-sandbox@sha256:24b69fd4d0aba0eb57b6cdd277d839ca3d83d906359d4b28b191f4ad53e8df97
+LABEL org.nvidia.nemo.ext.consumer="tests/functional_tests/launch_scripts/h100/active/L1_Launch_models_minicpmo.sh" \
+      org.nvidia.nemo.ext.consumer_blob="79568b114083f3c8790551d245772aae004f033f" \
+      org.nvidia.nemo.ext.candidate="cf1ba00f31c907f9ab75d0dc1f1eebb7fe6cf8cf" \
+      org.nvidia.nemo.ext.packages="minicpmo-utils==1.0.7 --no-deps"
+USER 1000:1000
+RUN UV_CACHE_DIR=/tmp/uv-ext-cache /usr/local/bin/uv pip install --python /opt/venv/bin/python --no-deps "minicpmo-utils==1.0.7" && \
+    rm -rf /tmp/uv-ext-cache && \
+    /opt/venv/bin/python -c "import importlib.metadata as m; v = m.version('minicpmo-utils'); assert v == '1.0.7', v; print('minicpmo-utils', v)"
+ENV HOME=/home/ubuntu
+USER 1000:1000
