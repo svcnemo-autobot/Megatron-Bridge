@@ -16,3 +16,9 @@ coverage.xml
 *.log
 **/*.nemo
 **/*.ckpt
+# Build-only staging for the nightly MCore validation image: mirror Bridge CI's
+# scripts/prepare_mcore.sh, which keeps upstream megatron/bridge and MCore build
+# outputs out of the Docker context. Not part of the bump PR.
+3rdparty/Megatron-LM/megatron/bridge
+3rdparty/Megatron-LM/build
+3rdparty/Megatron-LM/megatron_core.egg-info
